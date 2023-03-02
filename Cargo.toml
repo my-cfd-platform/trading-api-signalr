@@ -1,0 +1,11 @@
+[package]
+name = "trading-api-signalr"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+my-signalr-middleware = { tag = "0.5.0", git = "https://github.com/MyJetTools/my-signalr-middleware.git" }
+serde = {version = "1.0", features = ["derive"] }
+serde_json = "1.0.60"
