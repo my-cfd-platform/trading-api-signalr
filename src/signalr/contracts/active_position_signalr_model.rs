@@ -1,8 +1,14 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "PascalCase")]
 pub enum ActivePositionSignalRSideModel{
     Buy = 0,
     Sell = 1,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "PascalCase")]
 pub struct ActivePositionSignalRModel{
         pub id: String,
         pub invest_amount: f64,

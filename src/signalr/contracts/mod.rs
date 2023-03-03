@@ -7,6 +7,7 @@ mod signalr_message_wrapper;
 mod active_position_signalr_model;
 mod account_signalr_model;
 mod bid_ask_signalr_model;
+mod signalr_server_error;
 
 pub use init_action_signalr_model::*;
 pub use instrument_signalr_model::*;
@@ -17,3 +18,4 @@ pub use signalr_message_wrapper::*;
 pub use active_position_signalr_model::*;
 pub use account_signalr_model::*;
 pub use bid_ask_signalr_model::*;
+pub use signalr_server_error::*;
