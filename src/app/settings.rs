@@ -4,7 +4,9 @@ use serde::{Serialize, Deserialize};
 
 #[derive(SettingsModel, Serialize, Deserialize, Debug, Clone)]
 pub struct SettingsModel {
+    #[serde(rename = "AccountsManagerGrpc")]
     pub accounts_manager_grpc: String,
+    #[serde(rename = "NoSqlTcp")]
     pub nosql_tcp: String,
 }
 
