@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use trading_api_signalr::{AppContext, SettingsReader, setup_server};
+use trading_api_signalr::{setup_server, AppContext, SettingsReader};
 
 #[tokio::main]
 async fn main() {
@@ -9,6 +9,7 @@ async fn main() {
     let app = Arc::new(AppContext::new(settings_reader.clone()).await);
 
     setup_server(app.clone());
+    app.my_no_sql_connection.start(my_logger::LOGGER.clone()).await;
 
     app.app_states.wait_until_shutdown().await;
 }
