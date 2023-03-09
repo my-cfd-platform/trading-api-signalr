@@ -241,7 +241,6 @@ async fn handle_message(
 ) {
     match message {
         SignalRIncomeMessage::Init(token) => {
-            println!("Init . Ctx: {:#?}, Message: {:#?}", connection.ctx, token);
             let session = app
                 .sessions_ns_reader
                 .get_entity(&SessionEntity::get_pk(), &token.token)
@@ -255,7 +254,11 @@ async fn handle_message(
 
                 return ;
             };
-
+            connection.ctx.set_trader_id(&session.trader_id).await;
+            println!(
+                "Init after auth. Ctx: {:#?}, Message: {:#?}",
+                connection.ctx, token
+            );
             app.connections
                 .add_tag_to_connection(connection, USER_ID, &session.trader_id)
                 .await;
@@ -273,13 +276,21 @@ async fn handle_message(
                 .await;
         }
         SignalRIncomeMessage::SetActiveAccount(set_account_message) => {
+            connection
+                .ctx
+                .set_active_account(&set_account_message.account_id)
+                .await;
+            let client_data = connection.ctx.get_client_data().await;
             println!(
                 "Set active account. Ctx: {:#?}, Message: {:#?}",
                 connection.ctx, set_account_message
             );
             let trading_account = app
                 .accounts_manager
-                .get_client_account(&connection.ctx.trader_id, &set_account_message.account_id)
+                .get_client_account(
+                    &client_data.trader_id.unwrap(),
+                    &client_data.active_account_id.unwrap(),
+                )
                 .await;
 
             let Some(trading_account) = trading_account else{
@@ -352,7 +363,6 @@ async fn handle_message(
                 .await;
         }
         SignalRIncomeMessage::Ping => {
-            println!("Ping . Ctx: {:#?}", connection.ctx);
             app.signalr_message_sender
                 .send_message(
                     connection,
