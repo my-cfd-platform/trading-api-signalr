@@ -5,7 +5,7 @@ use my_nosql_contracts::*;
 use my_signalr_middleware::{SignalRPublshersBuilder, SignalrConnectionsList};
 use rust_extensions::AppStates;
 
-use crate::{AccountsManagerGrpcClient, SettingsModel, SignalRMessageSender};
+use crate::{AccountsManagerGrpcClient, SettingsModel, SignalRMessageSender, SignalRConnectionContext};
 
 pub const APP_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 pub const APP_NAME: &'static str = env!("CARGO_PKG_NAME");
@@ -13,7 +13,9 @@ pub const APP_NAME: &'static str = env!("CARGO_PKG_NAME");
 pub struct AppContext {
     pub instruments_ns_reader: Arc<MyNoSqlDataReader<TradingInstrumentNoSqlEntity>>,
     pub sessions_ns_reader: Arc<MyNoSqlDataReader<SessionEntity>>,
-    pub connections: Arc<SignalrConnectionsList<()>>,
+    pub trading_groups_ns_reader: Arc<MyNoSqlDataReader<TradingGroupNoSqlEntity>>,
+    pub trading_profile_ns_reader: Arc<MyNoSqlDataReader<TradingProfileNoSqlEntity>>,
+    pub connections: Arc<SignalrConnectionsList<SignalRConnectionContext>>,
     pub accounts_manager: Arc<AccountsManagerGrpcClient>,
     pub signalr_message_sender: Arc<SignalRMessageSender>,
     pub my_no_sql_connection: MyNoSqlTcpConnection,
@@ -36,6 +38,8 @@ impl AppContext {
         Self {
             instruments_ns_reader: my_no_sql_connection.get_reader().await,
             sessions_ns_reader: my_no_sql_connection.get_reader().await,
+            trading_groups_ns_reader: my_no_sql_connection.get_reader().await,
+            trading_profile_ns_reader: my_no_sql_connection.get_reader().await,
             connections,
             accounts_manager,
             signalr_message_sender: Arc::new(SignalRMessageSender::new(&signalr_builder)),

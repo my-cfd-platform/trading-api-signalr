@@ -6,7 +6,7 @@ use tonic::transport::Channel;
 use crate::{
     accounts_manager::{
         accounts_manager_grpc_service_client::AccountsManagerGrpcServiceClient,
-        AccountManagerGetClientAccountsGrpcRequest,
+        AccountManagerGetClientAccountGrpcRequest, AccountManagerGetClientAccountsGrpcRequest, AccountGrpcModel,
     },
     AccountSignalRModel,
 };
@@ -47,6 +47,30 @@ impl AccountsManagerGrpcClient {
         return AccountsManagerGrpcServiceClient::new(self.channel.get_channel().await.unwrap());
     }
 
+    pub async fn get_client_account(
+        &self,
+        trader_id: &str,
+        account_id: &str,
+    ) -> Option<AccountGrpcModel> {
+        let mut grpc_client = self.create_grpc_service().await;
+
+        let request = AccountManagerGetClientAccountGrpcRequest {
+            trader_id: trader_id.to_string(),
+            account_id: account_id.to_string(),
+        };
+
+        let response = grpc_client
+            .get_client_account(request)
+            .await
+            .unwrap()
+            .into_inner();
+
+        match response.account {
+            Some(account) => Some(account),
+            None => None,
+        }
+    }
+
     pub async fn get_client_accounts(&self, trader_id: &str) -> Vec<AccountSignalRModel> {
         let mut grpc_client = self.create_grpc_service().await;
         let request = AccountManagerGetClientAccountsGrpcRequest {
@@ -69,22 +93,7 @@ impl AccountsManagerGrpcClient {
             None => vec![],
         };
 
-        let accounts = accounts
-            .iter()
-            .map(|acc| AccountSignalRModel {
-                id: acc.id.clone(),
-                balance: acc.balance,
-                bonus: 0.0,
-                currency: acc.currency.clone(),
-                is_live: true,
-                digits: 2,
-                symbol: "USD".to_string(),
-                timestamp: acc.last_update_date,
-                invest_amount: 1000.0,
-                achievement_status: "".to_string(),
-                free_to_withdrawal: 0,
-            })
-            .collect();
+        let accounts = accounts.iter().map(|acc| acc.to_owned().into()).collect();
 
         return accounts;
     }

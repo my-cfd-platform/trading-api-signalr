@@ -76,6 +76,19 @@ where
     pub account_id: String,
 }
 
+impl<T> SignalRMessageWrapperWithAccount<T>
+where
+    T: Serialize,
+{
+    pub fn new(data: T, account_id: &str) -> Self {
+        Self {
+            now: chrono::Utc::now().timestamp_millis() as u64,
+            data,
+            account_id: account_id.to_string(),
+        }
+    }
+}
+
 impl<T> SignalrContractSerializer for SignalRMessageWrapperWithAccount<T>
 where
     T: Serialize,
