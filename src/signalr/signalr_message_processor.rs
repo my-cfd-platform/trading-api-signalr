@@ -4,13 +4,15 @@ use my_nosql_contracts::{
     SessionEntity, TradingGroupNoSqlEntity, TradingInstrumentNoSqlEntity, TradingProfileNoSqlEntity,
 };
 use my_signalr_middleware::{
-    MySignalrActionCallbacks, MySignalrConnection, SignalRPublshersBuilder, SignalrMessagePublisher,
+    MySignalrActionCallbacks, MySignalrConnection, SignalRPublshersBuilder,
+    SignalrContractDeserializer, SignalrMessagePublisher,
 };
+use serde::{Deserialize, Serialize};
 
 use crate::{
     AccountSignalRModel, AppContext, BidAskSignalRModel, InstumentSignalRModel,
-    SignalRConnectionContext, SignalREmptyMessage, SignalRError, SignalRIncomeMessage,
-    SignalRInitAction, SignalRMessageWrapper, SignalRMessageWrapperEmpty,
+    SetActiveAccountCommand, SignalRConnectionContext, SignalREmptyMessage, SignalRError,
+    SignalRIncomeMessage, SignalRInitAction, SignalRMessageWrapper, SignalRMessageWrapperEmpty,
     SignalRMessageWrapperWithAccount, SignalROutcomeMessage, USER_ID,
 };
 
@@ -63,6 +65,60 @@ impl MySignalrActionCallbacks<SignalRInitAction> for SignalRInitMessageProcessor
     ) {
         self.handle_message(SignalRIncomeMessage::Init(data), connection)
             .await;
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SignalRSetActiveAccountMessage {
+    pub account_id: String,
+}
+
+impl SignalrContractDeserializer for SignalRSetActiveAccountMessage {
+    type Item = SignalRSetActiveAccountMessage;
+
+    fn deserialize(data: &[&[u8]]) -> Result<Self::Item, String> {
+        return Ok(serde_json::from_slice(data[0]).unwrap());
+    }
+}
+
+pub struct SignalRSetActiveAccountMessageProcessor {
+    app_context: Arc<AppContext>,
+}
+
+impl SignalRSetActiveAccountMessageProcessor {
+    pub fn new(app_context: Arc<AppContext>) -> Self {
+        Self { app_context }
+    }
+
+    pub async fn handle_message(
+        &self,
+        message: SignalRIncomeMessage,
+        connection: &Arc<MySignalrConnection<SignalRConnectionContext>>,
+    ) {
+        handle_message(&self.app_context, message, connection).await;
+    }
+}
+
+#[async_trait::async_trait]
+impl MySignalrActionCallbacks<SignalRSetActiveAccountMessage>
+    for SignalRSetActiveAccountMessageProcessor
+{
+    type TCtx = SignalRConnectionContext;
+
+    async fn on(
+        &self,
+        connection: &Arc<MySignalrConnection<Self::TCtx>>,
+        _: Option<HashMap<String, String>>,
+        data: SignalRSetActiveAccountMessage,
+    ) {
+
+        connection.ctx.set_active_account(&data.account_id).await;
+        self.handle_message(
+            SignalRIncomeMessage::SetActiveAccount(SetActiveAccountCommand::new(data.account_id)),
+            connection,
+        )
+        .await;
     }
 }
 

@@ -5,3 +5,9 @@ use serde::{Deserialize, Serialize};
 pub struct SetActiveAccountCommand {
     pub account_id: String,
 }
+
+impl SetActiveAccountCommand {
+    pub fn new(account_id: String) -> Self {
+        Self { account_id }
+    }
+}
