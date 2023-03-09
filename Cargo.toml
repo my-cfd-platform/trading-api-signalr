@@ -20,7 +20,7 @@ prost = "*"
 prost-types = "*"
 my-no-sql-tcp-reader = { tag = "0.2.0", git = "https://github.com/MyJetTools/my-no-sql-tcp-reader.git" }
 my-no-sql-data-writer = { tag = "0.2.0", git = "https://github.com/MyJetTools/my-no-sql-data-writer.git" }
-my-nosql-contracts = { tag = "0.1.9", git = "https://github.com/my-cfd-platform/my-nosql-contracts.git" }
+my-nosql-contracts = { tag = "0.1.10", git = "https://github.com/my-cfd-platform/my-nosql-contracts.git" }
 my-grpc-extensions = { tag = "0.3.0", git = "https://github.com/MyJetTools/my-grpc-extensions.git" }
 chrono = "*"
 async-trait = "*"
