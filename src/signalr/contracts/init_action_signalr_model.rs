@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct SignalRInitAction {
     pub token: String,
 }
+
 impl SignalrContractDeserializer for SignalRInitAction {
     type Item = SignalRInitAction;
     fn deserialize(data: &[&[u8]]) -> Result<Self::Item, String> {

@@ -1,8 +1,13 @@
-use crate::{SetActiveAccountCommand, SignalRInitAction, InstumentSignalRModel, SignalRMessageWrapperWithAccount, PriceChangeSignalRModel, SignalRMessageWrapper, ActivePositionSignalRModel, AccountSignalRModel, BidAskSignalRModel, SignalRError};
+use crate::{
+    AccountSignalRModel, ActivePositionSignalRModel, BidAskSignalRModel, InstumentSignalRModel,
+    PriceChangeSignalRModel, SetActiveAccountCommand, SignalRError, SignalRInitAction,
+    SignalRMessageWrapper, SignalRMessageWrapperEmpty, SignalRMessageWrapperWithAccount,
+};
 
 pub enum SignalRIncomeMessage {
     Init(SignalRInitAction),
     SetActiveAccount(SetActiveAccountCommand),
+    Ping,
 }
 
 pub enum SignalROutcomeMessage {
@@ -12,5 +17,6 @@ pub enum SignalROutcomeMessage {
     PendingOrders(SignalRMessageWrapperWithAccount<Vec<ActivePositionSignalRModel>>),
     Accounts(SignalRMessageWrapper<Vec<AccountSignalRModel>>),
     BidAsk(SignalRMessageWrapper<Vec<BidAskSignalRModel>>),
-    Error(SignalRError)
+    Error(SignalRError),
+    Pong(SignalRMessageWrapperEmpty),
 }

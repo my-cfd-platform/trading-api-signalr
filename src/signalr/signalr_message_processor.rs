@@ -6,29 +6,16 @@ use my_signalr_middleware::{
 };
 
 use crate::{
-    AccountSignalRModel, AppContext, BidAskSignalRModel, SignalRError, SignalRIncomeMessage,
-    SignalRInitAction, SignalRMessageWrapper, SignalROutcomeMessage, USER_ID,
+    AccountSignalRModel, AppContext, BidAskSignalRModel, SignalREmptyMessage, SignalRError,
+    SignalRIncomeMessage, SignalRInitAction, SignalRMessageWrapper, SignalRMessageWrapperEmpty,
+    SignalROutcomeMessage, USER_ID,
 };
 
-pub struct SignalRMessageProcessor {
+pub struct SignalRPingMessageProcessor {
     app_context: Arc<AppContext>,
 }
 
-#[async_trait::async_trait]
-impl MySignalrActionCallbacks<SignalRInitAction> for SignalRMessageProcessor {
-    type TCtx = ();
-
-    async fn on(
-        &self,
-        connection: &Arc<MySignalrConnection<Self::TCtx>>,
-        _: Option<HashMap<String, String>>,
-        data: SignalRInitAction,
-    ) {
-        self.handle_message(SignalRIncomeMessage::Init(data), connection).await;
-    }
-}
-
-impl SignalRMessageProcessor {
+impl SignalRPingMessageProcessor {
     pub fn new(app_context: Arc<AppContext>) -> Self {
         Self { app_context }
     }
@@ -38,44 +25,55 @@ impl SignalRMessageProcessor {
         message: SignalRIncomeMessage,
         connection: &Arc<MySignalrConnection<()>>,
     ) {
-        match message {
-            SignalRIncomeMessage::Init(token) => {
-                let session = self
-                    .app_context
-                    .sessions_ns_reader
-                    .get_entity(&SessionEntity::get_pk(), &token.token)
-                    .await;
+        handle_message(&self.app_context, message, connection).await;
+    }
+}
 
-                let Some(session) =  session else{
-                    self.app_context.signalr_message_sender.send_message(
-                        connection,
-                        SignalROutcomeMessage::Error(SignalRError::new("Session not found".to_string())),
-                    ).await;
+#[async_trait::async_trait]
+impl MySignalrActionCallbacks<SignalREmptyMessage> for SignalRPingMessageProcessor {
+    type TCtx = ();
 
-                    return ;
-                };
+    async fn on(
+        &self,
+        connection: &Arc<MySignalrConnection<Self::TCtx>>,
+        _: Option<HashMap<String, String>>,
+        _: SignalREmptyMessage,
+    ) {
+        self.handle_message(SignalRIncomeMessage::Ping, connection)
+            .await;
+    }
+}
 
-                self.app_context
-                    .connections
-                    .add_tag_to_connection(&connection, USER_ID, &session.trader_id)
-                    .await;
+pub struct SignalRInitMessageProcessor {
+    app_context: Arc<AppContext>,
+}
 
-                let accounts = self
-                    .app_context
-                    .accounts_manager
-                    .get_client_accounts(&session.trader_id)
-                    .await;
+#[async_trait::async_trait]
+impl MySignalrActionCallbacks<SignalRInitAction> for SignalRInitMessageProcessor {
+    type TCtx = ();
 
-                self.app_context
-                    .signalr_message_sender
-                    .send_message(
-                        connection,
-                        SignalROutcomeMessage::Accounts(SignalRMessageWrapper::new(accounts)),
-                    )
-                    .await;
-            }
-            SignalRIncomeMessage::SetActiveAccount(_) => todo!(),
-        }
+    async fn on(
+        &self,
+        connection: &Arc<MySignalrConnection<Self::TCtx>>,
+        _: Option<HashMap<String, String>>,
+        data: SignalRInitAction,
+    ) {
+        self.handle_message(SignalRIncomeMessage::Init(data), connection)
+            .await;
+    }
+}
+
+impl SignalRInitMessageProcessor {
+    pub fn new(app_context: Arc<AppContext>) -> Self {
+        Self { app_context }
+    }
+
+    pub async fn handle_message(
+        &self,
+        message: SignalRIncomeMessage,
+        connection: &Arc<MySignalrConnection<()>>,
+    ) {
+        handle_message(&self.app_context, message, connection).await;
     }
 }
 
@@ -84,6 +82,7 @@ pub struct SignalRMessageSender {
         SignalrMessagePublisher<SignalRMessageWrapper<Vec<AccountSignalRModel>>, ()>,
     bidask_publisher: SignalrMessagePublisher<SignalRMessageWrapper<Vec<BidAskSignalRModel>>, ()>,
     error_publisher: SignalrMessagePublisher<SignalRError, ()>,
+    pong_publisher: SignalrMessagePublisher<SignalRMessageWrapperEmpty, ()>,
 }
 
 impl SignalRMessageSender {
@@ -92,6 +91,7 @@ impl SignalRMessageSender {
             accounts_publisher: builder.get_publisher("accounts".to_string()),
             error_publisher: builder.get_publisher("servererror".to_string()),
             bidask_publisher: builder.get_publisher("bidask".to_string()),
+            pong_publisher: builder.get_publisher("pong".to_string()),
         }
     }
 
@@ -110,6 +110,7 @@ impl SignalRMessageSender {
             }
             SignalROutcomeMessage::BidAsk(bid_ask) => self.send_bid_ask(connection, bid_ask).await,
             SignalROutcomeMessage::Error(error) => self.send_error(connection, error).await,
+            SignalROutcomeMessage::Pong(date) => self.send_pong(connection, date).await,
         };
     }
 
@@ -128,6 +129,17 @@ impl SignalRMessageSender {
             .send_to_connection(connection, error)
             .await;
     }
+
+    async fn send_pong(
+        &self,
+        connection: &Arc<MySignalrConnection<()>>,
+        date: SignalRMessageWrapperEmpty,
+    ) {
+        self.pong_publisher
+            .send_to_connection(connection, date)
+            .await;
+    }
+
     async fn send_bid_ask(
         &self,
         connection: &Arc<MySignalrConnection<()>>,
@@ -136,5 +148,54 @@ impl SignalRMessageSender {
         self.bidask_publisher
             .send_to_connection(connection, bidask)
             .await;
+    }
+}
+
+async fn handle_message(
+    app: &Arc<AppContext>,
+    message: SignalRIncomeMessage,
+    connection: &Arc<MySignalrConnection<()>>,
+) {
+    match message {
+        SignalRIncomeMessage::Init(token) => {
+            let session = app
+                .sessions_ns_reader
+                .get_entity(&SessionEntity::get_pk(), &token.token)
+                .await;
+
+            let Some(session) =  session else{
+                app.signalr_message_sender.send_message(
+                    connection,
+                    SignalROutcomeMessage::Error(SignalRError::new("Session not found".to_string())),
+                ).await;
+
+                return ;
+            };
+
+            app.connections
+                .add_tag_to_connection(&connection, USER_ID, &session.trader_id)
+                .await;
+
+            let accounts = app
+                .accounts_manager
+                .get_client_accounts(&session.trader_id)
+                .await;
+
+            app.signalr_message_sender
+                .send_message(
+                    connection,
+                    SignalROutcomeMessage::Accounts(SignalRMessageWrapper::new(accounts)),
+                )
+                .await;
+        }
+        SignalRIncomeMessage::SetActiveAccount(_) => todo!(),
+        SignalRIncomeMessage::Ping => {
+            app.signalr_message_sender
+                .send_message(
+                    connection,
+                    SignalROutcomeMessage::Pong(SignalRMessageWrapperEmpty::new()),
+                )
+                .await
+        }
     }
 }

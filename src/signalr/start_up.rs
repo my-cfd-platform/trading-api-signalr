@@ -4,7 +4,7 @@ use is_alive_middleware::IsAliveMiddleware;
 use my_http_server::MyHttpServer;
 use my_signalr_middleware::MySignalrMiddleware;
 
-use crate::{app::AppContext, SignalRMessageProcessor};
+use crate::{app::AppContext, SignalRInitMessageProcessor, SignalRPingMessageProcessor};
 
 pub fn setup_server(app: Arc<AppContext>) {
     let mut http_server = MyHttpServer::new(SocketAddr::from(([0, 0, 0, 0], 8000)));
@@ -21,7 +21,11 @@ pub fn setup_server(app: Arc<AppContext>) {
     )
     .with_action(
         "init".to_string(),
-        SignalRMessageProcessor::new(app.clone()),
+        SignalRInitMessageProcessor::new(app.clone()),
+    )
+    .with_action(
+        "ping".to_string(),
+        SignalRPingMessageProcessor::new(app.clone()),
     )
     .build();
 

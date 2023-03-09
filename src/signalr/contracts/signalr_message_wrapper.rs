@@ -1,5 +1,37 @@
-use my_signalr_middleware::SignalrContractSerializer;
+use my_signalr_middleware::{SignalrContractDeserializer, SignalrContractSerializer};
 use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Debug, Clone)]
+pub struct SignalREmptyMessage();
+
+impl SignalrContractDeserializer for SignalREmptyMessage {
+    type Item = SignalREmptyMessage;
+
+    fn deserialize(_: &[&[u8]]) -> Result<Self::Item, String> {
+        return Ok(SignalREmptyMessage {});
+    }
+}
+
+#[derive(Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SignalRMessageWrapperEmpty {
+    pub now: u64,
+}
+
+impl SignalRMessageWrapperEmpty {
+    pub fn new() -> Self {
+        Self {
+            now: chrono::Utc::now().timestamp_millis() as u64,
+        }
+    }
+}
+
+impl SignalrContractSerializer for SignalRMessageWrapperEmpty {
+    fn serialize(self) -> Vec<Vec<u8>> {
+        let json = serde_json::to_vec(&self);
+        return vec![json.unwrap()];
+    }
+}
 
 #[derive(Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
