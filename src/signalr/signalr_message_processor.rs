@@ -112,7 +112,6 @@ impl MySignalrActionCallbacks<SignalRSetActiveAccountMessage>
         _: Option<HashMap<String, String>>,
         data: SignalRSetActiveAccountMessage,
     ) {
-
         connection.ctx.set_active_account(&data.account_id).await;
         self.handle_message(
             SignalRIncomeMessage::SetActiveAccount(SetActiveAccountCommand::new(data.account_id)),
@@ -242,6 +241,7 @@ async fn handle_message(
 ) {
     match message {
         SignalRIncomeMessage::Init(token) => {
+            println!("Init . Ctx: {:#?}, Message: {:#?}", connection.ctx, token);
             let session = app
                 .sessions_ns_reader
                 .get_entity(&SessionEntity::get_pk(), &token.token)
@@ -273,6 +273,10 @@ async fn handle_message(
                 .await;
         }
         SignalRIncomeMessage::SetActiveAccount(set_account_message) => {
+            println!(
+                "Set active account. Ctx: {:#?}, Message: {:#?}",
+                connection.ctx, set_account_message
+            );
             let trading_account = app
                 .accounts_manager
                 .get_client_account(&connection.ctx.trader_id, &set_account_message.account_id)
@@ -348,6 +352,7 @@ async fn handle_message(
                 .await;
         }
         SignalRIncomeMessage::Ping => {
+            println!("Ping . Ctx: {:#?}", connection.ctx);
             app.signalr_message_sender
                 .send_message(
                     connection,

@@ -1,5 +1,6 @@
 use std::sync::RwLock;
 
+#[derive(Debug)]
 pub struct SignalRConnectionContext{
     pub trader_id: String,
     pub active_account_id: RwLock<Option<String>>,
