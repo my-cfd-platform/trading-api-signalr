@@ -73,7 +73,6 @@ impl SignalRMessageProcessor {
                         SignalROutcomeMessage::Accounts(SignalRMessageWrapper::new(accounts)),
                     )
                     .await;
-                // let instruments
             }
             SignalRIncomeMessage::SetActiveAccount(_) => todo!(),
         }

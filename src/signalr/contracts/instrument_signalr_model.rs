@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "PascalCase")]
+#[serde(rename_all = "camelCase")]
 pub struct InstumentSignalRModel {
     pub id: String,
     pub name: String,
@@ -26,7 +26,7 @@ pub struct InstumentSignalRModel {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "PascalCase")]
+#[serde(rename_all = "camelCase")]
 pub struct InstumentSignalRDayOffModel {
     pub dow_from: String,
     pub time_from: String,

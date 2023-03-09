@@ -2,7 +2,7 @@ use my_signalr_middleware::SignalrContractDeserializer;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "PascalCase")]
+#[serde(rename_all = "camelCase")]
 pub struct SignalRInitAction {
     pub token: String,
 }

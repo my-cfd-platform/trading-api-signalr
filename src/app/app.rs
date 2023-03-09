@@ -31,6 +31,7 @@ impl AppContext {
 
         let accounts_manager =
             Arc::new(AccountsManagerGrpcClient::new(settings.accounts_manager_grpc.clone()).await);
+            
         let signalr_builder = Arc::new(SignalRPublshersBuilder::new(connections.clone()));
         Self {
             instruments_ns_reader: my_no_sql_connection.get_reader().await,

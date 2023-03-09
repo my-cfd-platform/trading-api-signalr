@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
+#[serde(rename_all = "camelCase")]
 pub struct BidAskSignalRModel{
     pub id: String,
     pub bid: BidAskDataSignalRModel,
@@ -11,7 +11,7 @@ pub struct BidAskSignalRModel{
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
+#[serde(rename_all = "camelCase")]
 pub struct BidAskDataSignalRModel{
     pub h: f64,
     pub l: f64,
