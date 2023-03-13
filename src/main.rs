@@ -23,12 +23,11 @@ async fn main() {
         .await;
 
     send_prices_timer.start(app.app_states.clone(), my_logger::LOGGER.clone());
-
+    app.sb_client.start().await;
     setup_server(app.clone());
     app.my_no_sql_connection
         .start(my_logger::LOGGER.clone())
         .await;
 
-    app.sb_client.start().await;
     app.app_states.wait_until_shutdown().await;
 }
