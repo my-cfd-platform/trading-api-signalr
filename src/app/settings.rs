@@ -23,6 +23,6 @@ impl MyNoSqlTcpConnectionSettings for SettingsModel {
 #[async_trait::async_trait]
 impl MyServiceBusSettings for SettingsModel {
     async fn get_host_port(&self) -> String {
-        self.nosql_tcp.clone()
+        self.sb_tcp.clone()
     }
 }
