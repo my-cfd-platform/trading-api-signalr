@@ -35,7 +35,7 @@ impl AppContext {
         let connections = Arc::new(SignalrConnectionsList::new());
 
         let my_no_sql_connection = my_no_sql_tcp_reader::MyNoSqlTcpConnection::new(
-            format!("{}:{}", crate::app::APP_NAME, crate::app::APP_VERSION),
+            format!("{}", crate::app::APP_NAME),
             settings.clone(),
         );
 

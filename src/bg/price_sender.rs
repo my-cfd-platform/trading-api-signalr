@@ -17,7 +17,7 @@ impl PriceSendTimer {
 #[async_trait::async_trait]
 impl MyTimerTick for PriceSendTimer {
     async fn tick(&self) {
-        println!("Send prices to clients job");
+
         let Some(connections) = self.app.connections.get_all().await else{
             return ;
         };
