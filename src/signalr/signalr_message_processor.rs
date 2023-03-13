@@ -1,12 +1,13 @@
 use std::{collections::HashMap, sync::Arc};
 
 use my_nosql_contracts::{
-    SessionEntity, TradingGroupNoSqlEntity, TradingInstrumentNoSqlEntity, TradingProfileNoSqlEntity,
+    TradingGroupNoSqlEntity, TradingInstrumentNoSqlEntity, TradingProfileNoSqlEntity,
 };
 use my_signalr_middleware::{
     MySignalrActionCallbacks, MySignalrConnection, SignalRPublshersBuilder,
     SignalrContractDeserializer, SignalrMessagePublisher,
 };
+use rest_api_wl_shared::middlewares::SessionEntity;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -44,8 +45,7 @@ impl MySignalrActionCallbacks<SignalREmptyMessage> for SignalRPingMessageProcess
         _: Option<HashMap<String, String>>,
         _: SignalREmptyMessage,
     ) {
-        self.handle_message(SignalRIncomeMessage::Ping, connection)
-            .await;
+        self.handle_message(SignalRIncomeMessage::Ping, connection).await;
     }
 }
 
@@ -172,7 +172,7 @@ impl SignalRMessageSender {
             SignalROutcomeMessage::Instruments(instruments) => {
                 self.send_instruments(connection, instruments).await
             }
-            SignalROutcomeMessage::PriceChange(_) => todo!(),
+            SignalROutcomeMessage::PriceChange(price) => todo!(),
             SignalROutcomeMessage::PositionsActive(_) => todo!(),
             SignalROutcomeMessage::PendingOrders(_) => todo!(),
             SignalROutcomeMessage::Accounts(accounts) => {

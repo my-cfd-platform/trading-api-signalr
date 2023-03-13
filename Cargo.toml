@@ -10,6 +10,7 @@ my-http-server = { tag = "0.5.0", git = "https://github.com/MyJetTools/my-http-s
     "my-telemetry",
 ] }
 
+rest-api-wl-shared = { tag = "0.1.3", git = "https://github.com/my-cfd-platform/rest-api-wl-shared.git"}
 rust-extensions = { tag = "0.1.3", git = "https://github.com/MyJetTools/rust-extensions.git" }
 my-logger = { tag = "0.2.0", git = "https://github.com/MyJetTools/my-logger.git" }
 my-signalr-middleware = { tag = "0.5.0", git = "https://github.com/MyJetTools/my-signalr-middleware.git" }
@@ -25,10 +26,15 @@ my-grpc-extensions = { tag = "0.3.0", git = "https://github.com/MyJetTools/my-gr
 chrono = "*"
 async-trait = "*"
 is-alive-middleware = { tag = "0.5.0", git = "https://github.com/MyJetTools/is-alive-middleware.git" }
-
+cfd-engine-sb-contracts = { tag = "0.1.7", git = "https://github.com/my-cfd-platform/cfd-engine-sb-contracts.git"}
 my-settings-reader = { tag = "0.1.5", git = "https://github.com/MyJetTools/my-settings-reader.git", features = [
     "background-reader",
 ] }
+
+my-service-bus-tcp-client = { tag = "0.2.1", git = "https://github.com/MyJetTools/my-service-bus-tcp-client.git" }
+my-service-bus-tcp-shared = { tag = "0.3.1", git = "https://github.com/MyJetTools/my-service-bus-tcp-shared.git" }
+my-service-bus-abstractions = { tag = "0.1.1", git = "https://github.com/MyJetTools/my-service-bus-abstractions.git" }
+
 
 tokio = { version = "*", features = ["full"] }
 serde_yaml = "*"

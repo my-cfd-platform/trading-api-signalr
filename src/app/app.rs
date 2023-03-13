@@ -2,10 +2,16 @@ use std::sync::Arc;
 
 use my_no_sql_tcp_reader::{MyNoSqlDataReader, MyNoSqlTcpConnection};
 use my_nosql_contracts::*;
+use my_service_bus_tcp_client::MyServiceBusClient;
 use my_signalr_middleware::{SignalRPublshersBuilder, SignalrConnectionsList};
+use rest_api_wl_shared::middlewares::SessionEntity;
 use rust_extensions::AppStates;
+use tokio::sync::RwLock;
 
-use crate::{AccountsManagerGrpcClient, SettingsModel, SignalRMessageSender, SignalRConnectionContext};
+use crate::{
+    AccountsManagerGrpcClient, BidAskAggregator, SettingsModel, SignalRConnectionContext,
+    SignalRMessageSender,
+};
 
 pub const APP_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 pub const APP_NAME: &'static str = env!("CARGO_PKG_NAME");
@@ -20,6 +26,8 @@ pub struct AppContext {
     pub signalr_message_sender: Arc<SignalRMessageSender>,
     pub my_no_sql_connection: MyNoSqlTcpConnection,
     pub app_states: Arc<AppStates>,
+    pub bid_ask_aggregator: Arc<RwLock<BidAskAggregator>>,
+    pub sb_client: MyServiceBusClient,
 }
 
 impl AppContext {
@@ -33,7 +41,14 @@ impl AppContext {
 
         let accounts_manager =
             Arc::new(AccountsManagerGrpcClient::new(settings.accounts_manager_grpc.clone()).await);
-            
+
+        let sb_client = MyServiceBusClient::new(
+            APP_NAME,
+            APP_VERSION,
+            settings.clone(),
+            my_logger::LOGGER.clone(),
+        );
+
         let signalr_builder = Arc::new(SignalRPublshersBuilder::new(connections.clone()));
         Self {
             instruments_ns_reader: my_no_sql_connection.get_reader().await,
@@ -45,6 +60,8 @@ impl AppContext {
             signalr_message_sender: Arc::new(SignalRMessageSender::new(&signalr_builder)),
             my_no_sql_connection,
             app_states: Arc::new(AppStates::create_initialized()),
+            bid_ask_aggregator: Arc::new(RwLock::new(BidAskAggregator::new())),
+            sb_client,
         }
     }
 }
