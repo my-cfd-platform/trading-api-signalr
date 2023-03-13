@@ -22,29 +22,21 @@ impl MyTimerTick for PriceSendTimer {
         };
 
         let prices = self.app.bid_ask_aggregator.read().await;
-        let prices = prices
-            .get_current_profile()
-            .values()
-            .cloned()
-            .collect::<Vec<HashMap<String, BidAskSignalRModel>>>();
+        let prices = prices.get_current_profile();
 
         if prices.len() == 0 {
             return;
         }
 
-        for item in prices.iter() {
-            let instruments: Vec<BidAskSignalRModel> = item.values().cloned().collect();
-            for connection in &connections {
-                self.app
-                    .signalr_message_sender
-                    .send_message(
-                        &connection,
-                        SignalROutcomeMessage::BidAsk(SignalRMessageWrapper::new(
-                            instruments.clone(),
-                        )),
-                    )
-                    .await;
-            }
+        let instruments: Vec<BidAskSignalRModel> = prices.values().cloned().collect();
+        for connection in &connections {
+            self.app
+                .signalr_message_sender
+                .send_message(
+                    &connection,
+                    SignalROutcomeMessage::BidAsk(SignalRMessageWrapper::new(instruments.clone())),
+                )
+                .await;
         }
     }
 }
