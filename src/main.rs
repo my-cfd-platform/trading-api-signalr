@@ -1,7 +1,8 @@
 use rust_extensions::MyTimer;
 use std::sync::Arc;
 use trading_api_signalr::{
-    setup_server, AppContext, PriceSendTimer, PricesListener, SettingsReader, APP_NAME,
+    setup_server, AccountsUpdatesListener, AppContext, PriceSendTimer, PricesListener,
+    SettingsReader, APP_NAME,
 };
 
 #[tokio::main]
@@ -19,6 +20,14 @@ async fn main() {
             APP_NAME.to_string(),
             my_service_bus_abstractions::subscriber::TopicQueueType::DeleteOnDisconnect,
             Arc::new(PricesListener::new(app.clone())),
+        )
+        .await;
+
+    app.sb_client
+        .subscribe(
+            APP_NAME.to_string(),
+            my_service_bus_abstractions::subscriber::TopicQueueType::DeleteOnDisconnect,
+            Arc::new(AccountsUpdatesListener::new(app.clone())),
         )
         .await;
 

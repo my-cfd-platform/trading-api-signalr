@@ -11,11 +11,11 @@ impl Into<AccountSignalRModel> for AccountGrpcModel {
             currency: self.currency.clone(),
             is_live: true,
             digits: 2,
-            symbol: "USD".to_string(),
+            symbol: self.currency.clone(),
             timestamp: self.last_update_date,
-            invest_amount: 1000.0,
+            invest_amount: 0.0,
             achievement_status: "".to_string(),
-            free_to_withdrawal: 0,
+            free_to_withdrawal: self.balance,
         }
     }
 }

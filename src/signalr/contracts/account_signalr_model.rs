@@ -13,5 +13,5 @@ pub struct AccountSignalRModel {
     pub timestamp: u64,
     pub invest_amount: f64,
     pub achievement_status: String,
-    pub free_to_withdrawal: i32,
+    pub free_to_withdrawal: f64,
 }

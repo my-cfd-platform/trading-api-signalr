@@ -1,1 +1,1 @@
-pub const USER_ID: &str = "user-id";
+pub const USER_ID_TAG: &str = "trader_id";

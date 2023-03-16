@@ -14,7 +14,7 @@ use crate::{
     AccountSignalRModel, AppContext, BidAskSignalRModel, InstumentSignalRModel,
     SetActiveAccountCommand, SignalRConnectionContext, SignalREmptyMessage, SignalRError,
     SignalRIncomeMessage, SignalRInitAction, SignalRMessageWrapper, SignalRMessageWrapperEmpty,
-    SignalRMessageWrapperWithAccount, SignalROutcomeMessage, USER_ID,
+    SignalRMessageWrapperWithAccount, SignalROutcomeMessage, USER_ID_TAG,
 };
 
 pub struct SignalRPingMessageProcessor {
@@ -45,7 +45,8 @@ impl MySignalrActionCallbacks<SignalREmptyMessage> for SignalRPingMessageProcess
         _: Option<HashMap<String, String>>,
         _: SignalREmptyMessage,
     ) {
-        self.handle_message(SignalRIncomeMessage::Ping, connection).await;
+        self.handle_message(SignalRIncomeMessage::Ping, connection)
+            .await;
     }
 }
 
@@ -150,6 +151,10 @@ pub struct SignalRMessageSender {
         SignalRMessageWrapperWithAccount<Vec<InstumentSignalRModel>>,
         SignalRConnectionContext,
     >,
+    account_update_publisher: SignalrMessagePublisher<
+        SignalRMessageWrapper<AccountSignalRModel>,
+        SignalRConnectionContext,
+    >,
 }
 
 impl SignalRMessageSender {
@@ -160,6 +165,7 @@ impl SignalRMessageSender {
             bidask_publisher: builder.get_publisher("bidask".to_string()),
             pong_publisher: builder.get_publisher("pong".to_string()),
             instruments_publisher: builder.get_publisher("instruments".to_string()),
+            account_update_publisher: builder.get_publisher("updateaccount".to_string()),
         }
     }
 
@@ -172,11 +178,14 @@ impl SignalRMessageSender {
             SignalROutcomeMessage::Instruments(instruments) => {
                 self.send_instruments(connection, instruments).await
             }
-            SignalROutcomeMessage::PriceChange(price) => todo!(),
+            SignalROutcomeMessage::PriceChange(_) => todo!(),
             SignalROutcomeMessage::PositionsActive(_) => todo!(),
             SignalROutcomeMessage::PendingOrders(_) => todo!(),
             SignalROutcomeMessage::Accounts(accounts) => {
                 self.send_accounts(connection, accounts).await
+            },
+            SignalROutcomeMessage::AccountUpdate(account) => {
+                self.send_accounts_update(connection, account).await
             }
             SignalROutcomeMessage::BidAsk(bid_ask) => self.send_bid_ask(connection, bid_ask).await,
             SignalROutcomeMessage::Error(error) => self.send_error(connection, error).await,
@@ -190,6 +199,15 @@ impl SignalRMessageSender {
         accounts: SignalRMessageWrapper<Vec<AccountSignalRModel>>,
     ) {
         self.accounts_publisher
+            .send_to_connection(connection, accounts)
+            .await;
+    }
+    async fn send_accounts_update(
+        &self,
+        connection: &Arc<MySignalrConnection<SignalRConnectionContext>>,
+        accounts: SignalRMessageWrapper<AccountSignalRModel>,
+    ) {
+        self.account_update_publisher
             .send_to_connection(connection, accounts)
             .await;
     }
@@ -260,7 +278,7 @@ async fn handle_message(
                 connection.ctx, token
             );
             app.connections
-                .add_tag_to_connection(connection, USER_ID, &session.trader_id)
+                .add_tag_to_connection(connection, USER_ID_TAG, &session.trader_id)
                 .await;
 
             let accounts = app
