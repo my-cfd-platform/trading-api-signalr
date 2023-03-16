@@ -12,7 +12,7 @@ pub enum SignalRIncomeMessage {
 
 pub enum SignalROutcomeMessage {
     Instruments(SignalRMessageWrapperWithAccount<Vec<InstumentSignalRModel>>),
-    PriceChange(SignalRMessageWrapper<PriceChangeSignalRModel>),
+    PriceChange(SignalRMessageWrapper<Vec<PriceChangeSignalRModel>>),
     PositionsActive(SignalRMessageWrapperWithAccount<Vec<ActivePositionSignalRModel>>),
     PendingOrders(SignalRMessageWrapperWithAccount<Vec<ActivePositionSignalRModel>>),
     Accounts(SignalRMessageWrapper<Vec<AccountSignalRModel>>),

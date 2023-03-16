@@ -1,7 +1,8 @@
 use std::{collections::HashMap, sync::Arc};
 
 use my_nosql_contracts::{
-    TradingGroupNoSqlEntity, TradingInstrumentNoSqlEntity, TradingProfileNoSqlEntity,
+    PriceChangeSnapshotNoSqlEntity, TradingGroupNoSqlEntity, TradingInstrumentNoSqlEntity,
+    TradingProfileNoSqlEntity,
 };
 use my_signalr_middleware::{
     MySignalrActionCallbacks, MySignalrConnection, SignalRPublshersBuilder,
@@ -12,9 +13,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     AccountSignalRModel, AppContext, BidAskSignalRModel, InstumentSignalRModel,
-    SetActiveAccountCommand, SignalRConnectionContext, SignalREmptyMessage, SignalRError,
-    SignalRIncomeMessage, SignalRInitAction, SignalRMessageWrapper, SignalRMessageWrapperEmpty,
-    SignalRMessageWrapperWithAccount, SignalROutcomeMessage, USER_ID_TAG,
+    PriceChangeSignalRModel, SetActiveAccountCommand, SignalRConnectionContext,
+    SignalREmptyMessage, SignalRError, SignalRIncomeMessage, SignalRInitAction,
+    SignalRMessageWrapper, SignalRMessageWrapperEmpty, SignalRMessageWrapperWithAccount,
+    SignalROutcomeMessage, USER_ID_TAG,
 };
 
 pub struct SignalRPingMessageProcessor {
@@ -183,7 +185,7 @@ impl SignalRMessageSender {
             SignalROutcomeMessage::PendingOrders(_) => todo!(),
             SignalROutcomeMessage::Accounts(accounts) => {
                 self.send_accounts(connection, accounts).await
-            },
+            }
             SignalROutcomeMessage::AccountUpdate(account) => {
                 self.send_accounts_update(connection, account).await
             }
@@ -285,6 +287,29 @@ async fn handle_message(
                 .accounts_manager
                 .get_client_accounts(&session.trader_id)
                 .await;
+
+            let price_change = app
+                .price_change_ns_reader
+                .get_by_partition_key(PriceChangeSnapshotNoSqlEntity::get_daily_pk())
+                .await;
+
+            if let Some(price_change) = price_change {
+                let to_send = price_change
+                    .values()
+                    .map(|chng| PriceChangeSignalRModel {
+                        id: chng.row_key.clone(),
+                        chng: (chng.current_price - chng.previous_price) / chng.previous_price
+                            * 100.0,
+                    })
+                    .collect();
+
+                app.signalr_message_sender
+                    .send_message(
+                        connection,
+                        SignalROutcomeMessage::PriceChange(SignalRMessageWrapper::new(to_send)),
+                    )
+                    .await;
+            }
 
             app.signalr_message_sender
                 .send_message(
