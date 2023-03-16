@@ -358,17 +358,17 @@ async fn handle_message(
             };
 
             let instruments = trading_profile.instruments.iter().map(|tp_instument| async {
-                let Some(instument_model) = app.instruments_ns_reader.get_entity(TradingInstrumentNoSqlEntity::generate_partition_key(), &tp_instument.id).await else{
-                    panic!("instrument existed in tp but not in instruments")
+                let Some(instrument_model) = app.instruments_ns_reader.get_entity(TradingInstrumentNoSqlEntity::generate_partition_key(), &tp_instument.id).await else{
+                    return None;
                 };
 
-                return InstumentSignalRModel{
+                return Some(InstumentSignalRModel{
                     id: tp_instument.id.clone(),
-                    name: instument_model.name.clone(),
-                    digits: instument_model.digits,
-                    base: instument_model.base.clone(),
-                    quote: instument_model.quote.clone(),
-                    day_off: instument_model.days_off.iter().map(|day| day.to_owned().into()).collect(),
+                    name: instrument_model.name.clone(),
+                    digits: instrument_model.digits,
+                    base: instrument_model.base.clone(),
+                    quote: instrument_model.quote.clone(),
+                    day_off: instrument_model.days_off.iter().map(|day| day.to_owned().into()).collect(),
                     min_operation_volume: tp_instument.min_operation_volume,
                     max_operation_volume: tp_instument.max_operation_volume,
                     amount_step_size: 1.0,
@@ -379,18 +379,21 @@ async fn handle_message(
                     ask: None,
                     group_id: None,
                     sub_group_id: None,
-                    weight: instument_model.weight,
+                    weight: instrument_model.weight,
                     markup_bid: None,
                     markup_ask: None,
-                    tick_size: Some(instument_model.tick_size),
-                };
+                    tick_size: Some(instrument_model.tick_size),
+                });
             });
 
             let mut instruments_to_send = vec![];
 
             for task in instruments {
-                let result: InstumentSignalRModel = task.await;
-                instruments_to_send.push(result);
+                let result: Option<InstumentSignalRModel> = task.await;
+                match result {
+                    Some(instrument_to_send) => instruments_to_send.push(instrument_to_send),
+                    None => {}
+                }
             }
 
             app.signalr_message_sender
