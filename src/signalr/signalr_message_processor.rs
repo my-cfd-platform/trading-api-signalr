@@ -157,6 +157,10 @@ pub struct SignalRMessageSender {
         SignalRMessageWrapper<AccountSignalRModel>,
         SignalRConnectionContext,
     >,
+    price_change_publisher: SignalrMessagePublisher<
+        SignalRMessageWrapper<Vec<PriceChangeSignalRModel>>,
+        SignalRConnectionContext,
+    >,
 }
 
 impl SignalRMessageSender {
@@ -168,6 +172,7 @@ impl SignalRMessageSender {
             pong_publisher: builder.get_publisher("pong".to_string()),
             instruments_publisher: builder.get_publisher("instruments".to_string()),
             account_update_publisher: builder.get_publisher("updateaccount".to_string()),
+            price_change_publisher: builder.get_publisher("pricechange".to_string()),
         }
     }
 
@@ -180,7 +185,9 @@ impl SignalRMessageSender {
             SignalROutcomeMessage::Instruments(instruments) => {
                 self.send_instruments(connection, instruments).await
             }
-            SignalROutcomeMessage::PriceChange(_) => todo!(),
+            SignalROutcomeMessage::PriceChange(change) => {
+                self.send_price_change(connection, change).await
+            }
             SignalROutcomeMessage::PositionsActive(_) => todo!(),
             SignalROutcomeMessage::PendingOrders(_) => todo!(),
             SignalROutcomeMessage::Accounts(accounts) => {
@@ -211,6 +218,15 @@ impl SignalRMessageSender {
     ) {
         self.account_update_publisher
             .send_to_connection(connection, accounts)
+            .await;
+    }
+    async fn send_price_change(
+        &self,
+        connection: &Arc<MySignalrConnection<SignalRConnectionContext>>,
+        change: SignalRMessageWrapper<Vec<PriceChangeSignalRModel>>,
+    ) {
+        self.price_change_publisher
+            .send_to_connection(connection, change)
             .await;
     }
 
