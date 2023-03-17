@@ -377,7 +377,6 @@ async fn handle_message(
 
             let instruments_groups_to_send: Vec<InstrumentGroupSignalRModel> = instruments_groups
                 .iter()
-                .filter(|group| return instruments.get(&group.id).is_some())
                 .map(|x| {
                     return InstrumentGroupSignalRModel {
                         id: x.id.clone(),
