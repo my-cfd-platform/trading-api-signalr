@@ -433,7 +433,7 @@ async fn handle_message(
                         multiplier: vec![5],
                         bid: None,
                         ask: None,
-                        group_id: None,
+                        group_id: instrument_model.group_id.clone(),
                         sub_group_id: None,
                         weight: instrument_model.weight,
                         markup_bid: None,
