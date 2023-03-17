@@ -9,14 +9,18 @@ use my_signalr_middleware::{
     SignalrContractDeserializer, SignalrMessagePublisher,
 };
 use rest_api_wl_shared::middlewares::SessionEntity;
+use rust_decimal::{
+    prelude::{FromPrimitive, ToPrimitive},
+    Decimal,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    AccountSignalRModel, AppContext, BidAskSignalRModel, InstumentSignalRModel,
-    PriceChangeSignalRModel, SetActiveAccountCommand, SignalRConnectionContext,
-    SignalREmptyMessage, SignalRError, SignalRIncomeMessage, SignalRInitAction,
-    SignalRMessageWrapper, SignalRMessageWrapperEmpty, SignalRMessageWrapperWithAccount,
-    SignalROutcomeMessage, USER_ID_TAG,
+    AccountSignalRModel, AppContext, BidAskSignalRModel, InstrumentGroupSignalRModel,
+    InstrumentSignalRModel, PriceChangeSignalRModel, SetActiveAccountCommand,
+    SignalRConnectionContext, SignalREmptyMessage, SignalRError, SignalRIncomeMessage,
+    SignalRInitAction, SignalRMessageWrapper, SignalRMessageWrapperEmpty,
+    SignalRMessageWrapperWithAccount, SignalROutcomeMessage, USER_ID_TAG,
 };
 
 pub struct SignalRPingMessageProcessor {
@@ -150,7 +154,7 @@ pub struct SignalRMessageSender {
     error_publisher: SignalrMessagePublisher<SignalRError, SignalRConnectionContext>,
     pong_publisher: SignalrMessagePublisher<SignalRMessageWrapperEmpty, SignalRConnectionContext>,
     instruments_publisher: SignalrMessagePublisher<
-        SignalRMessageWrapperWithAccount<Vec<InstumentSignalRModel>>,
+        SignalRMessageWrapperWithAccount<Vec<InstrumentSignalRModel>>,
         SignalRConnectionContext,
     >,
     account_update_publisher: SignalrMessagePublisher<
@@ -159,6 +163,11 @@ pub struct SignalRMessageSender {
     >,
     price_change_publisher: SignalrMessagePublisher<
         SignalRMessageWrapper<Vec<PriceChangeSignalRModel>>,
+        SignalRConnectionContext,
+    >,
+
+    instruments_groups_publisher: SignalrMessagePublisher<
+        SignalRMessageWrapperWithAccount<Vec<InstrumentGroupSignalRModel>>,
         SignalRConnectionContext,
     >,
 }
@@ -173,6 +182,7 @@ impl SignalRMessageSender {
             instruments_publisher: builder.get_publisher("instruments".to_string()),
             account_update_publisher: builder.get_publisher("updateaccount".to_string()),
             price_change_publisher: builder.get_publisher("pricechange".to_string()),
+            instruments_groups_publisher: builder.get_publisher("instrumentgroups".to_string()),
         }
     }
 
@@ -199,6 +209,9 @@ impl SignalRMessageSender {
             SignalROutcomeMessage::BidAsk(bid_ask) => self.send_bid_ask(connection, bid_ask).await,
             SignalROutcomeMessage::Error(error) => self.send_error(connection, error).await,
             SignalROutcomeMessage::Pong(date) => self.send_pong(connection, date).await,
+            SignalROutcomeMessage::InstrumentsGroups(groups) => {
+                self.send_instrument_groups(connection, groups).await
+            }
         };
     }
 
@@ -242,7 +255,7 @@ impl SignalRMessageSender {
     async fn send_instruments(
         &self,
         connection: &Arc<MySignalrConnection<SignalRConnectionContext>>,
-        message: SignalRMessageWrapperWithAccount<Vec<InstumentSignalRModel>>,
+        message: SignalRMessageWrapperWithAccount<Vec<InstrumentSignalRModel>>,
     ) {
         self.instruments_publisher
             .send_to_connection(connection, message)
@@ -255,6 +268,15 @@ impl SignalRMessageSender {
         date: SignalRMessageWrapperEmpty,
     ) {
         self.pong_publisher
+            .send_to_connection(connection, date)
+            .await;
+    }
+    async fn send_instrument_groups(
+        &self,
+        connection: &Arc<MySignalrConnection<SignalRConnectionContext>>,
+        date: SignalRMessageWrapperWithAccount<Vec<InstrumentGroupSignalRModel>>,
+    ) {
+        self.instruments_groups_publisher
             .send_to_connection(connection, date)
             .await;
     }
@@ -304,29 +326,6 @@ async fn handle_message(
                 .get_client_accounts(&session.trader_id)
                 .await;
 
-            let price_change = app
-                .price_change_ns_reader
-                .get_by_partition_key(PriceChangeSnapshotNoSqlEntity::get_daily_pk())
-                .await;
-
-            if let Some(price_change) = price_change {
-                let to_send = price_change
-                    .values()
-                    .map(|chng| PriceChangeSignalRModel {
-                        id: chng.row_key.clone(),
-                        chng: (chng.current_price - chng.previous_price) / chng.previous_price
-                            * 100.0,
-                    })
-                    .collect();
-
-                app.signalr_message_sender
-                    .send_message(
-                        connection,
-                        SignalROutcomeMessage::PriceChange(SignalRMessageWrapper::new(to_send)),
-                    )
-                    .await;
-            }
-
             app.signalr_message_sender
                 .send_message(
                     connection,
@@ -357,6 +356,37 @@ async fn handle_message(
                 return;
             };
 
+            let Some(raw_instruments) = app.instruments_ns_reader.get_table_snapshot_as_vec().await else{
+                app.signalr_message_sender.send_message(connection, SignalROutcomeMessage::Error(SignalRError::new("Instruments not found".to_string()))).await;
+                return ;
+            };
+
+            let mut instruments: HashMap<String, Arc<TradingInstrumentNoSqlEntity>> =
+                HashMap::new();
+
+            for instrument in raw_instruments {
+                if !instrument.trading_disabled {
+                    instruments.insert(instrument.get_id().to_string(), instrument);
+                }
+            }
+
+            let Some(instruments_groups) = app.instruments_groups_ns_reader.get_table_snapshot_as_vec().await else{
+                app.signalr_message_sender.send_message(connection, SignalROutcomeMessage::Error(SignalRError::new("Instruments groups not found".to_string()))).await;
+                return ;
+            };
+
+            let instruments_groups_to_send: Vec<InstrumentGroupSignalRModel> = instruments_groups
+                .iter()
+                .filter(|group| return instruments.get(&group.id).is_some())
+                .map(|x| {
+                    return InstrumentGroupSignalRModel {
+                        id: x.id.clone(),
+                        name: x.name.clone(),
+                        weight: x.weight,
+                    };
+                })
+                .collect();
+
             let Some(trading_group) = app
                 .trading_groups_ns_reader
                 .get_entity(
@@ -364,7 +394,7 @@ async fn handle_message(
                     &trading_account.trading_group,
                 )
                 .await else{
-                    app.signalr_message_sender.send_message(connection, SignalROutcomeMessage::Error(SignalRError::new("Group not found".to_string()))).await;
+                    app.signalr_message_sender.send_message(connection, SignalROutcomeMessage::Error(SignalRError::new("Trading group not found".to_string()))).await;
                     return;
                 };
 
@@ -373,44 +403,48 @@ async fn handle_message(
                 return;
             };
 
-            let instruments = trading_profile.instruments.iter().map(|tp_instument| async {
-                let Some(instrument_model) = app.instruments_ns_reader.get_entity(TradingInstrumentNoSqlEntity::generate_partition_key(), &tp_instument.id).await else{
+            let instruments_to_send: Vec<InstrumentSignalRModel> = trading_profile
+                .instruments
+                .iter()
+                .map(|tp_instrument| {
+                    let Some(instrument_model) = instruments.get(&tp_instrument.id) else{
                     return None;
                 };
 
-                return Some(InstumentSignalRModel{
-                    id: tp_instument.id.clone(),
-                    name: instrument_model.name.clone(),
-                    digits: instrument_model.digits,
-                    base: instrument_model.base.clone(),
-                    quote: instrument_model.quote.clone(),
-                    day_off: instrument_model.days_off.iter().map(|day| day.to_owned().into()).collect(),
-                    min_operation_volume: tp_instument.min_operation_volume,
-                    max_operation_volume: tp_instument.max_operation_volume,
-                    amount_step_size: 1.0,
-                    max_position_volume: tp_instument.max_position_volume,
-                    stop_out_percent: trading_profile.stop_out_percent,
-                    multiplier: vec![5],
-                    bid: None,
-                    ask: None,
-                    group_id: None,
-                    sub_group_id: None,
-                    weight: instrument_model.weight,
-                    markup_bid: None,
-                    markup_ask: None,
-                    tick_size: Some(instrument_model.tick_size),
-                });
-            });
+                    if instrument_model.trading_disabled {
+                        return None;
+                    }
 
-            let mut instruments_to_send = vec![];
-
-            for task in instruments {
-                let result: Option<InstumentSignalRModel> = task.await;
-                match result {
-                    Some(instrument_to_send) => instruments_to_send.push(instrument_to_send),
-                    None => {}
-                }
-            }
+                    return Some(InstrumentSignalRModel {
+                        id: tp_instrument.id.clone(),
+                        name: instrument_model.name.clone(),
+                        digits: instrument_model.digits,
+                        base: instrument_model.base.clone(),
+                        quote: instrument_model.quote.clone(),
+                        day_off: instrument_model
+                            .days_off
+                            .iter()
+                            .map(|day| day.to_owned().into())
+                            .collect(),
+                        min_operation_volume: tp_instrument.min_operation_volume,
+                        max_operation_volume: tp_instrument.max_operation_volume,
+                        amount_step_size: 1.0,
+                        max_position_volume: tp_instrument.max_position_volume,
+                        stop_out_percent: trading_profile.stop_out_percent,
+                        multiplier: vec![5],
+                        bid: None,
+                        ask: None,
+                        group_id: None,
+                        sub_group_id: None,
+                        weight: instrument_model.weight,
+                        markup_bid: None,
+                        markup_ask: None,
+                        tick_size: Some(instrument_model.tick_size),
+                    });
+                })
+                .filter(|x| x.is_some())
+                .map(|x| x.unwrap())
+                .collect();
 
             app.signalr_message_sender
                 .send_message(
@@ -423,6 +457,51 @@ async fn handle_message(
                     ),
                 )
                 .await;
+
+            app.signalr_message_sender
+                .send_message(
+                    connection,
+                    SignalROutcomeMessage::InstrumentsGroups(
+                        SignalRMessageWrapperWithAccount::new(
+                            instruments_groups_to_send,
+                            &set_account_message.account_id,
+                        ),
+                    ),
+                )
+                .await;
+
+            let price_change = app
+                .price_change_ns_reader
+                .get_by_partition_key(PriceChangeSnapshotNoSqlEntity::get_daily_pk())
+                .await;
+
+            if let Some(price_changes) = price_change {
+                let mut to_send = vec![];
+
+                for (_, price_change) in price_changes {
+                    if let Some(instrument) = instruments.get(&price_change.row_key) {
+                        let change = (price_change.current_price - price_change.previous_price)
+                            / price_change.previous_price
+                            * 100.0;
+
+                        let change = Decimal::from_f64(change)
+                            .unwrap()
+                            .round_dp(instrument.tick_size as u32);
+
+                        to_send.push(PriceChangeSignalRModel {
+                            id: price_change.row_key.clone(),
+                            chng: change.to_f64().unwrap(),
+                        });
+                    }
+                }
+
+                app.signalr_message_sender
+                    .send_message(
+                        connection,
+                        SignalROutcomeMessage::PriceChange(SignalRMessageWrapper::new(to_send)),
+                    )
+                    .await;
+            }
         }
         SignalRIncomeMessage::Ping => {
             app.signalr_message_sender

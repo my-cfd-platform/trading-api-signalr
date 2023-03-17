@@ -8,6 +8,7 @@ mod active_position_signalr_model;
 mod account_signalr_model;
 mod signalr_server_error;
 mod bid_ask_model;
+mod instrument_group;
 
 pub use init_action_signalr_model::*;
 pub use instrument_signalr_model::*;
@@ -19,3 +20,4 @@ pub use active_position_signalr_model::*;
 pub use account_signalr_model::*;
 pub use signalr_server_error::*;
 pub use bid_ask_model::*;
+pub use instrument_group::*;

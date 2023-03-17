@@ -1,7 +1,7 @@
 use crate::{
-    AccountSignalRModel, ActivePositionSignalRModel, BidAskSignalRModel, InstumentSignalRModel,
+    AccountSignalRModel, ActivePositionSignalRModel, BidAskSignalRModel, InstrumentSignalRModel,
     PriceChangeSignalRModel, SetActiveAccountCommand, SignalRError, SignalRInitAction,
-    SignalRMessageWrapper, SignalRMessageWrapperEmpty, SignalRMessageWrapperWithAccount,
+    SignalRMessageWrapper, SignalRMessageWrapperEmpty, SignalRMessageWrapperWithAccount, InstrumentGroupSignalRModel,
 };
 
 pub enum SignalRIncomeMessage {
@@ -11,7 +11,8 @@ pub enum SignalRIncomeMessage {
 }
 
 pub enum SignalROutcomeMessage {
-    Instruments(SignalRMessageWrapperWithAccount<Vec<InstumentSignalRModel>>),
+    Instruments(SignalRMessageWrapperWithAccount<Vec<InstrumentSignalRModel>>),
+    InstrumentsGroups(SignalRMessageWrapperWithAccount<Vec<InstrumentGroupSignalRModel>>),
     PriceChange(SignalRMessageWrapper<Vec<PriceChangeSignalRModel>>),
     PositionsActive(SignalRMessageWrapperWithAccount<Vec<ActivePositionSignalRModel>>),
     PendingOrders(SignalRMessageWrapperWithAccount<Vec<ActivePositionSignalRModel>>),

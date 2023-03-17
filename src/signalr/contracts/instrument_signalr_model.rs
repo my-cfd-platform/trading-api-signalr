@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct InstumentSignalRModel {
+pub struct InstrumentSignalRModel {
     pub id: String,
     pub name: String,
     pub digits: i32,
