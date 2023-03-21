@@ -1,4 +1,4 @@
-use std::collections::{HashMap, BTreeMap};
+use std::collections::{BTreeMap, HashMap};
 
 use cfd_engine_sb_contracts::BidAskSbModel;
 use chrono::{DateTime, Datelike, NaiveDateTime, TimeZone, Timelike, Utc};
@@ -49,11 +49,8 @@ impl BidAskAggregator {
             }
             None => {
                 let direction = BidAskDirection::new(mid);
-                self.bid_ask_direction
-                    .insert(bid_ask.id.clone(), direction);
-                self.bid_ask_direction
-                    .get_mut(&bid_ask.id)
-                    .unwrap()
+                self.bid_ask_direction.insert(bid_ask.id.clone(), direction);
+                self.bid_ask_direction.get_mut(&bid_ask.id).unwrap()
             }
         };
 
@@ -83,10 +80,11 @@ impl BidAskAggregator {
         }
     }
 
-    pub fn get_current_profile(
-        &self,
-    ) -> &HashMap<String, BidAskSignalRModel> {
-        let last_key = self.candles_cache.last_key_value().unwrap().1;
-        last_key
+    pub fn get_current_profile(&self) -> Option<&HashMap<String, BidAskSignalRModel>> {
+        if let Some(kv) = self.candles_cache.last_key_value() {
+            return Some(kv.1);
+        }
+
+        return None;
     }
 }

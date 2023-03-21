@@ -1,4 +1,4 @@
-use std::{sync::Arc};
+use std::sync::Arc;
 
 use rust_extensions::MyTimerTick;
 
@@ -23,6 +23,10 @@ impl MyTimerTick for PriceSendTimer {
 
         let prices = self.app.bid_ask_aggregator.read().await;
         let prices = prices.get_current_profile();
+
+        let Some(prices) = prices else {
+            return ;
+        };
 
         if prices.len() == 0 {
             return;
