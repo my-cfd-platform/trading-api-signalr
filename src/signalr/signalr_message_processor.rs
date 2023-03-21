@@ -483,9 +483,11 @@ async fn handle_message(
                             / price_change.previous_price
                             * 100.0;
 
-                        let change = Decimal::from_f64(change)
-                            .unwrap()
-                            .round_dp(instrument.tick_size as u32);
+                        let Some(change) = Decimal::from_f64(change) else{
+                            continue;
+                        };
+
+                        let change = change.round_dp(instrument.tick_size as u32);
 
                         to_send.push(PriceChangeSignalRModel {
                             id: price_change.row_key.clone(),
