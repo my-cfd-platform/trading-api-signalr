@@ -10,7 +10,7 @@ use tokio::sync::RwLock;
 
 use crate::{
     AccountsManagerGrpcClient, BidAskAggregator, SettingsModel, SignalRConnectionContext,
-    SignalRMessageSender,
+    SignalRMessageSender, TradingExecutorGrpcClient,
 };
 
 pub const APP_VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -30,6 +30,7 @@ pub struct AppContext {
     pub app_states: Arc<AppStates>,
     pub bid_ask_aggregator: Arc<RwLock<BidAskAggregator>>,
     pub sb_client: MyServiceBusClient,
+    pub trading_executor: Arc<TradingExecutorGrpcClient>,
 }
 
 impl AppContext {
@@ -66,6 +67,9 @@ impl AppContext {
             app_states: Arc::new(AppStates::create_initialized()),
             bid_ask_aggregator: Arc::new(RwLock::new(BidAskAggregator::new())),
             sb_client,
+            trading_executor: Arc::new(
+                TradingExecutorGrpcClient::new(settings.trading_executor_url.clone()).await,
+            ),
         }
     }
 }

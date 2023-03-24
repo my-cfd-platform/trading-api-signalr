@@ -16,10 +16,10 @@ use rust_decimal::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    AccountSignalRModel, AppContext, BidAskSignalRModel, InstrumentGroupSignalRModel,
-    InstrumentSignalRModel, PriceChangeSignalRModel, SetActiveAccountCommand,
-    SignalRConnectionContext, SignalREmptyMessage, SignalRError, SignalRIncomeMessage,
-    SignalRInitAction, SignalRMessageWrapper, SignalRMessageWrapperEmpty,
+    AccountSignalRModel, ActivePositionSignalRModel, AppContext, BidAskSignalRModel,
+    InstrumentGroupSignalRModel, InstrumentSignalRModel, PriceChangeSignalRModel,
+    SetActiveAccountCommand, SignalRConnectionContext, SignalREmptyMessage, SignalRError,
+    SignalRIncomeMessage, SignalRInitAction, SignalRMessageWrapper, SignalRMessageWrapperEmpty,
     SignalRMessageWrapperWithAccount, SignalROutcomeMessage, USER_ID_TAG,
 };
 
@@ -170,6 +170,15 @@ pub struct SignalRMessageSender {
         SignalRMessageWrapperWithAccount<Vec<InstrumentGroupSignalRModel>>,
         SignalRConnectionContext,
     >,
+    position_update_publisher: SignalrMessagePublisher<
+        SignalRMessageWrapperWithAccount<ActivePositionSignalRModel>,
+        SignalRConnectionContext,
+    >,
+
+    position_publisher: SignalrMessagePublisher<
+        SignalRMessageWrapperWithAccount<Vec<ActivePositionSignalRModel>>,
+        SignalRConnectionContext,
+    >,
 }
 
 impl SignalRMessageSender {
@@ -183,6 +192,8 @@ impl SignalRMessageSender {
             account_update_publisher: builder.get_publisher("updateaccount".to_string()),
             price_change_publisher: builder.get_publisher("pricechange".to_string()),
             instruments_groups_publisher: builder.get_publisher("instrumentgroups".to_string()),
+            position_update_publisher: builder.get_publisher("updateactiveposition".to_string()),
+            position_publisher: builder.get_publisher("positionsactive".to_string()),
         }
     }
 
@@ -212,6 +223,13 @@ impl SignalRMessageSender {
             SignalROutcomeMessage::InstrumentsGroups(groups) => {
                 self.send_instrument_groups(connection, groups).await
             }
+            SignalROutcomeMessage::PositionUpdate(update_message) => {
+                self.send_position_update(connection, update_message).await
+            }
+            SignalROutcomeMessage::ActivePositions(active_positions) => {
+                self.send_active_position(connection, active_positions)
+                    .await
+            }
         };
     }
 
@@ -231,6 +249,25 @@ impl SignalRMessageSender {
     ) {
         self.account_update_publisher
             .send_to_connection(connection, accounts)
+            .await;
+    }
+    async fn send_position_update(
+        &self,
+        connection: &Arc<MySignalrConnection<SignalRConnectionContext>>,
+        position: SignalRMessageWrapperWithAccount<ActivePositionSignalRModel>,
+    ) {
+        self.position_update_publisher
+            .send_to_connection(connection, position)
+            .await;
+    }
+
+    async fn send_active_position(
+        &self,
+        connection: &Arc<MySignalrConnection<SignalRConnectionContext>>,
+        position: SignalRMessageWrapperWithAccount<Vec<ActivePositionSignalRModel>>,
+    ) {
+        self.position_publisher
+            .send_to_connection(connection, position)
             .await;
     }
     async fn send_price_change(
@@ -472,6 +509,24 @@ async fn handle_message(
             let price_change = app
                 .price_change_ns_reader
                 .get_by_partition_key(PriceChangeSnapshotNoSqlEntity::get_daily_pk())
+                .await;
+
+            let active_positions = app
+                .trading_executor
+                .get_active_positions(&trading_account.id, &trading_account.trader_id)
+                .await;
+
+            app.signalr_message_sender
+                .send_message(
+                    connection,
+                    SignalROutcomeMessage::ActivePositions(SignalRMessageWrapperWithAccount::new(
+                        active_positions
+                            .iter()
+                            .map(|x| x.to_owned().into())
+                            .collect(),
+                        &set_account_message.account_id,
+                    )),
+                )
                 .await;
 
             if let Some(price_changes) = price_change {

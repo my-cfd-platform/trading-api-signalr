@@ -11,6 +11,8 @@ pub struct SettingsModel {
     pub nosql_tcp: String,
     #[serde(rename = "SbTcp")]
     pub sb_tcp: String,
+    #[serde(rename = "TradingExecutorGrpcUrl")]
+    pub trading_executor_url: String,
 }
 
 #[async_trait::async_trait]

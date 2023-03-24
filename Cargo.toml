@@ -29,7 +29,7 @@ is-alive-middleware = { tag = "0.5.0", git = "https://github.com/MyJetTools/is-a
 my-settings-reader = { tag = "0.1.5", git = "https://github.com/MyJetTools/my-settings-reader.git", features = [
     "background-reader",
 ] }
-cfd-engine-sb-contracts = { tag = "0.1.11", git = "https://github.com/my-cfd-platform/cfd-engine-sb-contracts.git"}
+cfd-engine-sb-contracts = { tag = "0.1.13", git = "https://github.com/my-cfd-platform/cfd-engine-sb-contracts.git"}
 my-service-bus-tcp-client = { tag = "0.2.1", git = "https://github.com/MyJetTools/my-service-bus-tcp-client.git" }
 my-service-bus-tcp-shared = { tag = "0.3.1", git = "https://github.com/MyJetTools/my-service-bus-tcp-shared.git" }
 my-service-bus-abstractions = { tag = "0.1.1", git = "https://github.com/MyJetTools/my-service-bus-abstractions.git" }

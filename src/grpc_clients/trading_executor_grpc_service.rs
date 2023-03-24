@@ -46,12 +46,18 @@ impl TradingExecutorGrpcClient {
 
     pub async fn get_active_positions(
         &self,
-        request: TradingExecutorGetActivePositionsGrpcRequest,
+        account_id: &str,
+        trader_id: &str,
     ) -> Vec<TradingExecutorActivePositionGrpcModel> {
         let mut grpc_client = self.create_grpc_service().await;
 
         let response = grpc_client
-            .get_account_active_positions(tonic::Request::new(request))
+            .get_account_active_positions(tonic::Request::new(
+                TradingExecutorGetActivePositionsGrpcRequest {
+                    trader_id: trader_id.to_string(),
+                    account_id: account_id.to_string(),
+                },
+            ))
             .await
             .unwrap()
             .into_inner();

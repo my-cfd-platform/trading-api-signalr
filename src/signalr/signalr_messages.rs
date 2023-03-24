@@ -19,6 +19,8 @@ pub enum SignalROutcomeMessage {
     Accounts(SignalRMessageWrapper<Vec<AccountSignalRModel>>),
     AccountUpdate(SignalRMessageWrapper<AccountSignalRModel>),
     BidAsk(SignalRMessageWrapper<Vec<BidAskSignalRModel>>),
+    PositionUpdate(SignalRMessageWrapperWithAccount<ActivePositionSignalRModel>),
+    ActivePositions(SignalRMessageWrapperWithAccount<Vec<ActivePositionSignalRModel>>),
     Error(SignalRError),
     Pong(SignalRMessageWrapperEmpty),
 }
