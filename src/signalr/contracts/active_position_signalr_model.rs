@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
+use serde_repr::{Serialize_repr, Deserialize_repr};
 
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Serialize_repr, Deserialize_repr,)]
+#[repr(u8)]
 pub enum ActivePositionSignalRSideModel{
     Buy = 0,
     Sell = 1,
