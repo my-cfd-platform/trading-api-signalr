@@ -24,7 +24,7 @@ impl From<OrderSbModel> for ActivePositionSignalRModel {
     fn from(src: OrderSbModel) -> Self {
         Self {
             id: src.id,
-            invest_amount: src.invest_amount,
+            investment_amount: src.invest_amount,
             open_price: src.open_price,
             open_date: src.open_date,
             instrument: src.asset_pair,
