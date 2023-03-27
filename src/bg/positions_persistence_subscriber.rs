@@ -5,7 +5,10 @@ use my_service_bus_abstractions::subscriber::{
     MessagesReader, MySbSubscriberHandleError, SubscriberCallback,
 };
 
-use crate::{AppContext, SignalRMessageWrapperWithAccount, USER_ID_TAG, ActivePositionSignalRModel};
+use crate::{
+    ActivePositionSignalRModel, AppContext, SignalRMessageWrapperWithAccount,
+    SignalROutcomeMessage, USER_ID_TAG,
+};
 
 pub struct PositionsUpdateListener {
     pub app: Arc<AppContext>,
@@ -27,13 +30,19 @@ impl SubscriberCallback<PositionPersistenceEvent> for PositionsUpdateListener {
             let operation = message.take_message();
 
             let Some(active_position) = operation.create_position else{
-                return Ok(());
+                continue;
             };
 
             let Some(connections) = self.app.connections
             .get_tagged_connections_with_value(USER_ID_TAG, &active_position.trader_id).await else{
-                return Ok(());
+                continue;
             };
+
+            let account_active_positions = self
+                .app
+                .trading_executor
+                .get_active_positions(&active_position.account_id, &active_position.trader_id)
+                .await;
 
             for connection in connections {
                 self.app
@@ -43,6 +52,22 @@ impl SubscriberCallback<PositionPersistenceEvent> for PositionsUpdateListener {
                         crate::SignalROutcomeMessage::PositionUpdate(
                             SignalRMessageWrapperWithAccount::new(
                                 ActivePositionSignalRModel::from(active_position.clone()),
+                                &active_position.account_id,
+                            ),
+                        ),
+                    )
+                    .await;
+
+                self.app
+                    .signalr_message_sender
+                    .send_message(
+                        &connection,
+                        SignalROutcomeMessage::ActivePositions(
+                            SignalRMessageWrapperWithAccount::new(
+                                account_active_positions
+                                    .iter()
+                                    .map(|x| x.to_owned().into())
+                                    .collect(),
                                 &active_position.account_id,
                             ),
                         ),
