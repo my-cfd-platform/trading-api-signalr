@@ -36,7 +36,7 @@ impl Into<ActivePositionSignalRModel> for TradingExecutorActivePositionGrpcModel
     fn into(self) -> ActivePositionSignalRModel {
         ActivePositionSignalRModel{
             id: self.id,
-            invest_amount: self.invest_amount,
+            investment_amount: self.invest_amount,
             open_price: self.open_price,
             open_date: self.open_date,
             instrument: self.asset_pair,

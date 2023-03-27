@@ -21,7 +21,7 @@ impl From<i32> for ActivePositionSignalRSideModel {
 #[serde(rename_all = "camelCase")]
 pub struct ActivePositionSignalRModel{
         pub id: String,
-        pub invest_amount: f64,
+        pub investment_amount: f64,
         pub open_price: f64,
         pub open_date: u64,
         pub instrument: String,
