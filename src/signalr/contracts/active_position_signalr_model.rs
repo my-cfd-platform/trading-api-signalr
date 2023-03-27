@@ -20,7 +20,7 @@ impl From<i32> for ActivePositionSignalRSideModel {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ActivePositionSignalRModel{
-        pub id: String,
+        pub id: i32,
         pub investment_amount: f64,
         pub open_price: f64,
         pub open_date: u64,
