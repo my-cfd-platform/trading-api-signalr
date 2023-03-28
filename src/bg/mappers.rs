@@ -1,6 +1,40 @@
-use cfd_engine_sb_contracts::{AccountSbModel, OrderSbModel};
+use cfd_engine_sb_contracts::{AccountSbModel, OrderSbModel, PositionPersistenceEvent};
 
 use crate::{AccountSignalRModel, ActivePositionSignalRModel, ActivePositionSignalRSideModel};
+
+pub enum SbPositionPersistenceUpdateType {
+    Create(OrderSbModel),
+    Update(OrderSbModel),
+    Close(OrderSbModel),
+}
+
+impl SbPositionPersistenceUpdateType {
+    pub fn extract_trader_id(&self) -> &str{
+        match self {
+            SbPositionPersistenceUpdateType::Create(order) => &order.trader_id,
+            SbPositionPersistenceUpdateType::Update(order) => &order.trader_id,
+            SbPositionPersistenceUpdateType::Close(order) => &order.trader_id,
+        }
+    }
+}
+
+impl From<PositionPersistenceEvent> for SbPositionPersistenceUpdateType {
+    fn from(value: PositionPersistenceEvent) -> Self {
+        if let Some(order) = value.create_position {
+            return SbPositionPersistenceUpdateType::Create(order);
+        }
+
+        if let Some(order) = value.update_position {
+            return SbPositionPersistenceUpdateType::Update(order);
+        }
+
+        if let Some(order) = value.close_position {
+            return SbPositionPersistenceUpdateType::Close(order);
+        }
+
+        panic!("Unknown position persistence event type: {:?}", value);
+    }
+}
 
 impl From<AccountSbModel> for AccountSignalRModel {
     fn from(src: AccountSbModel) -> Self {

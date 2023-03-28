@@ -46,8 +46,8 @@ impl TradingExecutorGrpcClient {
 
     pub async fn get_active_positions(
         &self,
-        account_id: &str,
         trader_id: &str,
+        account_id: &str,
     ) -> Vec<TradingExecutorActivePositionGrpcModel> {
         let mut grpc_client = self.create_grpc_service().await;
 

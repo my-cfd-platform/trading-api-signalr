@@ -10,6 +10,7 @@ pub enum SignalRIncomeMessage {
     Ping,
 }
 
+#[derive(Debug, Clone)]
 pub enum SignalROutcomeMessage {
     Instruments(SignalRMessageWrapperWithAccount<Vec<InstrumentSignalRModel>>),
     InstrumentsGroups(SignalRMessageWrapperWithAccount<Vec<InstrumentGroupSignalRModel>>),

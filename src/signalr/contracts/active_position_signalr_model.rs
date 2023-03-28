@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_repr::{Serialize_repr, Deserialize_repr};
 
-#[derive(Debug, Serialize_repr, Deserialize_repr,)]
+#[derive(Debug, Serialize_repr, Deserialize_repr, Clone)]
 #[repr(u8)]
 pub enum ActivePositionSignalRSideModel{
     Buy = 0,
@@ -12,13 +12,13 @@ impl From<i32> for ActivePositionSignalRSideModel {
     fn from(value: i32) -> Self {
         match value{
             0 => ActivePositionSignalRSideModel::Buy,
-            1 => ActivePositionSignalRSideModel::Buy,
+            1 => ActivePositionSignalRSideModel::Sell,
             _ => panic!("Unknown value")
         }
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ActivePositionSignalRModel{
         pub id: i32,
