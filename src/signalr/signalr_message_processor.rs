@@ -513,7 +513,7 @@ async fn handle_message(
 
             let active_positions = app
                 .trading_executor
-                .get_active_positions(&trading_account.id, &trading_account.trader_id)
+                .get_active_positions(&trading_account.trader_id, &trading_account.id)
                 .await;
 
             app.signalr_message_sender
