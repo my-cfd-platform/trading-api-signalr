@@ -35,7 +35,7 @@ impl Into<InstumentSignalRDayOffModel> for TradingInstrumentDayOff {
 impl Into<ActivePositionSignalRModel> for TradingExecutorActivePositionGrpcModel {
     fn into(self) -> ActivePositionSignalRModel {
         ActivePositionSignalRModel{
-            id: self.open_date as i32,
+            id: self.id,
             investment_amount: self.invest_amount,
             open_price: self.open_price,
             open_date: self.open_date,
