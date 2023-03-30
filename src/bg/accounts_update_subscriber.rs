@@ -28,7 +28,7 @@ impl SubscriberCallback<AccountBalanceUpdateSbModel> for AccountsUpdatesListener
             let account = operation.account_after_update.unwrap();
             let Some(connections) = self.app.connections
             .get_tagged_connections_with_value(USER_ID_TAG, &account.trader_id).await else{
-                return Ok(());
+                continue;
             };
 
             for connection in connections {
