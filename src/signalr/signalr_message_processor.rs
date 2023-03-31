@@ -363,6 +363,8 @@ async fn handle_message(
                 .get_client_accounts(&session.trader_id)
                 .await;
 
+            println!("Accounts: {:#?}", accounts);
+
             app.signalr_message_sender
                 .send_message(
                     connection,
