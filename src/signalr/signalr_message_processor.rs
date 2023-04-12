@@ -469,7 +469,7 @@ async fn handle_message(
                         amount_step_size: 1.0,
                         max_position_volume: tp_instrument.max_position_volume,
                         stop_out_percent: trading_profile.stop_out_percent,
-                        multiplier: vec![5],
+                        multiplier: tp_instrument.leverages.clone(),
                         bid: None,
                         ask: None,
                         group_id: instrument_model.group_id.clone(),

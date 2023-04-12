@@ -36,9 +36,10 @@ my-service-bus-abstractions = { tag = "0.1.1", git = "https://github.com/MyJetTo
 
 tokio = { version = "*", features = ["full"] }
 rust_decimal = "1.29.0"
-rust_decimal_macros = "1.29"
+rust_decimal_macros = "1.29.1"
 serde_yaml = "*"
 flurl = { tag = "0.2.3", git = "https://github.com/MyJetTools/fl-url.git" }
 serde_repr = "0.1"
+
 [build-dependencies]
 tonic-build = { version = "0.8.4", features = ["prost"] }
