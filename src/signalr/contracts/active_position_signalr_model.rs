@@ -18,6 +18,14 @@ impl From<i32> for ActivePositionSignalRSideModel {
     }
 }
 
+#[derive(Clone, Copy, Serialize_repr, Debug, Deserialize_repr)]
+#[repr(u8)]
+pub enum SlTpType {
+    Currency,
+    Price,
+    Percent,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ActivePositionSignalRModel{
@@ -33,8 +41,8 @@ pub struct ActivePositionSignalRModel{
         pub time_stamp: u64,
         pub tp: Option<f64>,
         pub sl: Option<f64>,
-        pub tp_type: Option<i32>,
-        pub sl_type: Option<i32>,
+        pub tp_type: Option<SlTpType>,
+        pub sl_type: Option<SlTpType>,
         pub is_topping_up_active: bool,
         pub reserved_funds_for_topping_up: f64,
 } 

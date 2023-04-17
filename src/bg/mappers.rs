@@ -1,6 +1,6 @@
 use cfd_engine_sb_contracts::{AccountSbModel, OrderSbModel, PositionPersistenceEvent};
 
-use crate::{AccountSignalRModel, ActivePositionSignalRModel, ActivePositionSignalRSideModel};
+use crate::{AccountSignalRModel, ActivePositionSignalRModel, ActivePositionSignalRSideModel, SlTpType};
 
 pub enum SbPositionPersistenceUpdateType {
     Create(OrderSbModel),
@@ -56,7 +56,7 @@ impl From<AccountSbModel> for AccountSignalRModel {
 
 impl From<OrderSbModel> for ActivePositionSignalRModel {
     fn from(src: OrderSbModel) -> Self {
-        Self {
+        let mut model = Self {
             id: src.id,
             investment_amount: src.invest_amount,
             open_price: src.open_price,
@@ -73,6 +73,28 @@ impl From<OrderSbModel> for ActivePositionSignalRModel {
             sl_type: None,
             is_topping_up_active: false,
             reserved_funds_for_topping_up: 0.0,
-        }
+        };
+
+        if src.sl_in_instrument_price.is_some() {
+            model.sl = src.sl_in_instrument_price;
+            model.sl_type = Some(SlTpType::Price);
+        };
+
+        if src.sl_in_currency.is_some() {
+            model.sl = src.sl_in_currency;
+            model.sl_type = Some(SlTpType::Currency);
+        };
+
+        if src.tp_in_instrument_price.is_some() {
+            model.tp = src.tp_in_instrument_price;
+            model.tp_type = Some(SlTpType::Price);
+        };
+
+        if src.tp_in_currency.is_some() {
+            model.tp = src.tp_in_currency;
+            model.tp_type = Some(SlTpType::Currency);
+        };
+
+        model
     }
 }

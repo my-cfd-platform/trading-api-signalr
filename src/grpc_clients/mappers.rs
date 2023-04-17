@@ -1,6 +1,6 @@
 use my_nosql_contracts::TradingInstrumentDayOff;
 
-use crate::{accounts_manager::AccountGrpcModel, AccountSignalRModel, InstumentSignalRDayOffModel, ActivePositionSignalRModel, trading_executor::TradingExecutorActivePositionGrpcModel};
+use crate::{accounts_manager::AccountGrpcModel, AccountSignalRModel, InstumentSignalRDayOffModel, ActivePositionSignalRModel, trading_executor::TradingExecutorActivePositionGrpcModel, SlTpType};
 
 impl Into<AccountSignalRModel> for AccountGrpcModel {
     fn into(self) -> AccountSignalRModel {
@@ -34,7 +34,7 @@ impl Into<InstumentSignalRDayOffModel> for TradingInstrumentDayOff {
 
 impl Into<ActivePositionSignalRModel> for TradingExecutorActivePositionGrpcModel {
     fn into(self) -> ActivePositionSignalRModel {
-        ActivePositionSignalRModel{
+        let mut model = ActivePositionSignalRModel{
             id: self.id,
             investment_amount: self.invest_amount,
             open_price: self.open_price,
@@ -51,6 +51,28 @@ impl Into<ActivePositionSignalRModel> for TradingExecutorActivePositionGrpcModel
             sl_type: None,
             is_topping_up_active: false,
             reserved_funds_for_topping_up: 0.0,
-        }
+        };
+
+        if self.sl_in_asset_price.is_some() {
+            model.sl = self.sl_in_asset_price;
+            model.sl_type = Some(SlTpType::Price);
+        };
+
+        if self.sl_in_profit.is_some() {
+            model.sl = self.sl_in_profit;
+            model.sl_type = Some(SlTpType::Currency);
+        };
+
+        if self.tp_in_asset_price.is_some() {
+            model.tp = self.tp_in_asset_price;
+            model.tp_type = Some(SlTpType::Price);
+        };
+
+        if self.tp_in_profit.is_some() {
+            model.tp = self.tp_in_profit;
+            model.tp_type = Some(SlTpType::Currency);
+        };
+
+        model
     }
 }
