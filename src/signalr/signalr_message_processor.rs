@@ -416,12 +416,16 @@ async fn handle_message(
 
             let instruments_groups_to_send: Vec<InstrumentGroupSignalRModel> = instruments_groups
                 .iter()
-                .map(|x| {
-                    return InstrumentGroupSignalRModel {
+                .filter_map(|x| {
+                    if x.hidden {
+                        return None;
+                    }
+
+                    return Some(InstrumentGroupSignalRModel {
                         id: x.id.clone(),
                         name: x.name.clone(),
                         weight: x.weight,
-                    };
+                    });
                 })
                 .collect();
 
