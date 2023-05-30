@@ -1,8 +1,8 @@
 use std::{collections::HashMap, sync::Arc};
 
 use my_nosql_contracts::{
-    PriceChangeSnapshotNoSqlEntity, TradingGroupNoSqlEntity, TradingInstrumentNoSqlEntity,
-    TradingProfileNoSqlEntity,
+    BidAskSnapshotNoSqlEntity, PriceChangeSnapshotNoSqlEntity, TradingGroupNoSqlEntity,
+    TradingInstrumentNoSqlEntity, TradingProfileNoSqlEntity,
 };
 use my_signalr_middleware::{
     MySignalrActionCallbacks, MySignalrConnection, SignalRPublshersBuilder,
@@ -445,6 +445,11 @@ async fn handle_message(
                 return;
             };
 
+            let prices = app
+                .bid_ask_snapshot_reader
+                .get_by_partition_key(BidAskSnapshotNoSqlEntity::generate_partition_key())
+                .await;
+
             let instruments_to_send: Vec<InstrumentSignalRModel> = trading_profile
                 .instruments
                 .iter()
@@ -457,7 +462,7 @@ async fn handle_message(
                         return None;
                     }
 
-                    return Some(InstrumentSignalRModel {
+                    let mut instrument = InstrumentSignalRModel {
                         id: tp_instrument.id.clone(),
                         name: instrument_model.name.clone(),
                         digits: instrument_model.digits,
@@ -482,7 +487,16 @@ async fn handle_message(
                         markup_bid: None,
                         markup_ask: None,
                         tick_size: Some(instrument_model.tick_size),
-                    });
+                    };
+
+                    if let Some(prices) = &prices {
+                        if let Some(price) = prices.get(&instrument.id) {
+                            instrument.bid = Some(price.bid);
+                            instrument.ask = Some(price.ask);
+                        }
+                    }
+
+                    return Some(instrument);
                 })
                 .filter(|x| x.is_some())
                 .map(|x| x.unwrap())

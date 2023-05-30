@@ -18,6 +18,7 @@ pub const APP_NAME: &'static str = env!("CARGO_PKG_NAME");
 
 pub struct AppContext {
     pub instruments_ns_reader: Arc<MyNoSqlDataReader<TradingInstrumentNoSqlEntity>>,
+    pub bid_ask_snapshot_reader: Arc<MyNoSqlDataReader<BidAskSnapshotNoSqlEntity>>,
     pub sessions_ns_reader: Arc<MyNoSqlDataReader<SessionEntity>>,
     pub trading_groups_ns_reader: Arc<MyNoSqlDataReader<TradingGroupNoSqlEntity>>,
     pub price_change_ns_reader: Arc<MyNoSqlDataReader<PriceChangeSnapshotNoSqlEntity>>,
