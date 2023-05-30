@@ -60,6 +60,7 @@ impl AppContext {
             trading_groups_ns_reader: my_no_sql_connection.get_reader().await,
             trading_profile_ns_reader: my_no_sql_connection.get_reader().await,
             price_change_ns_reader: my_no_sql_connection.get_reader().await,
+            bid_ask_snapshot_reader: my_no_sql_connection.get_reader().await,
             instruments_groups_ns_reader: my_no_sql_connection.get_reader().await,
             connections,
             accounts_manager,
