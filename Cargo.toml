@@ -9,37 +9,47 @@ edition = "2021"
 my-http-server = { tag = "0.5.0", git = "https://github.com/MyJetTools/my-http-server.git", features = [
     "my-telemetry",
 ] }
-
-rest-api-wl-shared = { tag = "0.1.3", git = "https://github.com/my-cfd-platform/rest-api-wl-shared.git"}
-rust-extensions = { tag = "0.1.3", git = "https://github.com/MyJetTools/rust-extensions.git" }
-my-logger = { tag = "0.2.1", git = "https://github.com/MyJetTools/my-logger.git" }
 my-signalr-middleware = { tag = "0.5.0", git = "https://github.com/MyJetTools/my-signalr-middleware.git" }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0.60"
-tonic = { version = "*", features = ["tls", "tls-roots", "prost"] }
-prost = "*"
-prost-types = "*"
-my-no-sql-tcp-reader = { tag = "0.2.0", git = "https://github.com/MyJetTools/my-no-sql-tcp-reader.git" }
-my-no-sql-data-writer = { tag = "0.2.0", git = "https://github.com/MyJetTools/my-no-sql-data-writer.git" }
-my-nosql-contracts = { tag = "0.1.15", git = "https://github.com/my-cfd-platform/my-nosql-contracts.git" }
-my-grpc-extensions = { tag = "0.3.0", git = "https://github.com/MyJetTools/my-grpc-extensions.git" }
-chrono = "*"
-async-trait = "*"
+
+my-logger = { tag = "0.2.1", git = "https://github.com/MyJetTools/my-logger.git" }
+
+rest-api-wl-shared = { tag = "0.1.3", git = "https://github.com/my-cfd-platform/rest-api-wl-shared.git" }
+rust-extensions = { tag = "0.1.3", git = "https://github.com/MyJetTools/rust-extensions.git" }
+cfd-engine-sb-contracts = { tag = "0.1.18", git = "https://github.com/my-cfd-platform/cfd-engine-sb-contracts.git" }
+my-service-bus-tcp-client = { tag = "0.2.1", git = "https://github.com/MyJetTools/my-service-bus-tcp-client.git" }
+my-service-bus-tcp-shared = { tag = "0.3.2", git = "https://github.com/MyJetTools/my-service-bus-tcp-shared.git" }
+my-service-bus-abstractions = { tag = "0.1.1", git = "https://github.com/MyJetTools/my-service-bus-abstractions.git" }
 is-alive-middleware = { tag = "0.5.0", git = "https://github.com/MyJetTools/is-alive-middleware.git" }
 my-settings-reader = { tag = "0.1.5", git = "https://github.com/MyJetTools/my-settings-reader.git", features = [
     "background-reader",
 ] }
-cfd-engine-sb-contracts = { tag = "0.1.13", git = "https://github.com/my-cfd-platform/cfd-engine-sb-contracts.git"}
-my-service-bus-tcp-client = { tag = "0.2.1", git = "https://github.com/MyJetTools/my-service-bus-tcp-client.git" }
-my-service-bus-tcp-shared = { tag = "0.3.2", git = "https://github.com/MyJetTools/my-service-bus-tcp-shared.git" }
-my-service-bus-abstractions = { tag = "0.1.1", git = "https://github.com/MyJetTools/my-service-bus-abstractions.git" }
+
+my-no-sql-tcp-reader = { tag = "0.2.0", git = "https://github.com/MyJetTools/my-no-sql-tcp-reader.git" }
+my-no-sql-data-writer = { tag = "0.3.0", git = "https://github.com/MyJetTools/my-no-sql-data-writer.git" }
+my-nosql-contracts = { tag = "0.1.16", git = "https://github.com/my-cfd-platform/my-nosql-contracts.git" }
+my-grpc-extensions = { tag = "0.4.0", git = "https://github.com/MyJetTools/my-grpc-extensions.git" }
+my-grpc-client-macros = { tag = "0.1.0", git = "https://github.com/MyJetTools/my-grpc-client-macros.git" }
+
+flurl = { tag = "0.4.0", git = "https://github.com/MyJetTools/fl-url.git" }
+
+my-telemetry = { tag = "0.3.0", git = "https://github.com/MyJetTools/my-telemetry.git" }
+my-telemetry-writer = { tag = "0.3.0", git = "https://github.com/MyJetTools/my-telemetry-writer.git" }
+
+
+serde = { version = "*", features = ["derive"] }
+serde_json = "*"
+tonic = { version = "*", features = ["tls", "tls-roots", "prost"] }
+prost = "*"
+prost-types = "*"
+chrono = "*"
+async-trait = "*"
 
 tokio = { version = "*", features = ["full"] }
-rust_decimal = "1.29.0"
-rust_decimal_macros = "1.29.1"
+rust_decimal = "*"
+rust_decimal_macros = "*"
 serde_yaml = "*"
-flurl = { tag = "0.2.3", git = "https://github.com/MyJetTools/fl-url.git" }
-serde_repr = "0.1"
+
+serde_repr = "*"
 
 [build-dependencies]
-tonic-build = { version = "0.8.4", features = ["prost"] }
+ci-utils = { git = "https://github.com/MyJetTools/ci-utils.git", tag = "0.1.0" }

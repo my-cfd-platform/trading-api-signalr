@@ -1,3 +1,17 @@
+#[my_grpc_client_macros::generate_grpc_client(
+    proto_file: "./proto/AccountsManagerGrpcService.proto",
+    crate_ns: "crate::accounts_manager_grpc",
+    retries: 3,
+    request_timeout_sec: 1,
+    ping_timeout_sec: 1,
+    ping_interval_sec: 3,
+)]
+pub struct AccountsManagerGrpcClient {
+    channel: my_grpc_extensions::GrpcChannel<TGrpcService>,
+}
+
+/*
+
 use std::{sync::Arc, time::Duration};
 
 use my_grpc_extensions::{GrpcChannel, GrpcClientSettings};
@@ -10,6 +24,8 @@ use crate::{
     },
     AccountSignalRModel,
 };
+
+
 
 struct AccountsManagerSettingsGrpcUrl(String);
 
@@ -98,3 +114,4 @@ impl AccountsManagerGrpcClient {
         return accounts;
     }
 }
+ */

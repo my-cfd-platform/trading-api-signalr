@@ -8,6 +8,7 @@ use my_signalr_middleware::{
     MySignalrActionCallbacks, MySignalrConnection, SignalRPublshersBuilder,
     SignalrContractDeserializer, SignalrMessagePublisher,
 };
+use my_telemetry::MyTelemetryContext;
 use rest_api_wl_shared::middlewares::SessionEntity;
 use rust_decimal::{
     prelude::{FromPrimitive, ToPrimitive},
@@ -16,10 +17,11 @@ use rust_decimal::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    AccountSignalRModel, ActivePositionSignalRModel, AppContext, BidAskSignalRModel,
-    InstrumentGroupSignalRModel, InstrumentSignalRModel, PriceChangeSignalRModel,
-    SetActiveAccountCommand, SignalRConnectionContext, SignalREmptyMessage, SignalRError,
-    SignalRIncomeMessage, SignalRInitAction, SignalRMessageWrapper, SignalRMessageWrapperEmpty,
+    accounts_manager_grpc::*, trading_executor_grpc::*, AccountSignalRModel,
+    ActivePositionSignalRModel, AppContext, BidAskSignalRModel, InstrumentGroupSignalRModel,
+    InstrumentSignalRModel, PriceChangeSignalRModel, SetActiveAccountCommand,
+    SignalRConnectionContext, SignalREmptyMessage, SignalRError, SignalRIncomeMessage,
+    SignalRInitAction, SignalRMessageWrapper, SignalRMessageWrapperEmpty,
     SignalRMessageWrapperWithAccount, SignalROutcomeMessage, USER_ID_TAG,
 };
 
@@ -336,18 +338,26 @@ async fn handle_message(
 ) {
     match message {
         SignalRIncomeMessage::Init(token) => {
+            let my_telemetry = MyTelemetryContext::new();
+
+            let _ = my_telemetry.start_event_tracking("SignalR Init");
+
             let session = app
                 .sessions_ns_reader
                 .get_entity(&SessionEntity::get_pk(), &token.token)
                 .await;
 
-            let Some(session) =  session else{
-                app.signalr_message_sender.send_message(
-                    connection,
-                    SignalROutcomeMessage::Error(SignalRError::new("Session not found".to_string())),
-                ).await;
+            let Some(session) = session else {
+                app.signalr_message_sender
+                    .send_message(
+                        connection,
+                        SignalROutcomeMessage::Error(SignalRError::new(
+                            "Session not found".to_string(),
+                        )),
+                    )
+                    .await;
 
-                return ;
+                return;
             };
             connection.ctx.set_trader_id(&session.trader_id).await;
             println!(
@@ -360,10 +370,21 @@ async fn handle_message(
 
             let accounts = app
                 .accounts_manager
-                .get_client_accounts(&session.trader_id)
-                .await;
+                .get_client_accounts(
+                    AccountManagerGetClientAccountsGrpcRequest {
+                        trader_id: session.trader_id.to_string(),
+                    },
+                    &my_telemetry,
+                )
+                .await
+                .unwrap();
 
             println!("Accounts: {:#?}", accounts);
+
+            let accounts = match accounts {
+                Some(accounts) => accounts.iter().map(|acc| acc.to_owned().into()).collect(),
+                None => vec![],
+            };
 
             app.signalr_message_sender
                 .send_message(
@@ -373,6 +394,10 @@ async fn handle_message(
                 .await;
         }
         SignalRIncomeMessage::SetActiveAccount(set_account_message) => {
+            let my_telemetry = MyTelemetryContext::new();
+
+            let _ = my_telemetry.start_event_tracking("SetActiveAccount");
+
             connection
                 .ctx
                 .set_active_account(&set_account_message.account_id)
@@ -382,22 +407,41 @@ async fn handle_message(
                 "Set active account. Ctx: {:#?}, Message: {:#?}",
                 connection.ctx, set_account_message
             );
-            let trading_account = app
+            let response = app
                 .accounts_manager
                 .get_client_account(
-                    &client_data.trader_id.unwrap(),
-                    &client_data.active_account_id.unwrap(),
+                    AccountManagerGetClientAccountGrpcRequest {
+                        trader_id: client_data.trader_id.unwrap(),
+                        account_id: client_data.active_account_id.unwrap(),
+                    },
+                    &my_telemetry,
                 )
-                .await;
+                .await
+                .unwrap();
 
-            let Some(trading_account) = trading_account else{
-                app.signalr_message_sender.send_message(connection, SignalROutcomeMessage::Error(SignalRError::new("Account not found".to_string()))).await;
+            let Some(trading_account) = response.account else {
+                app.signalr_message_sender
+                    .send_message(
+                        connection,
+                        SignalROutcomeMessage::Error(SignalRError::new(
+                            "Account not found".to_string(),
+                        )),
+                    )
+                    .await;
                 return;
             };
 
-            let Some(raw_instruments) = app.instruments_ns_reader.get_table_snapshot_as_vec().await else{
-                app.signalr_message_sender.send_message(connection, SignalROutcomeMessage::Error(SignalRError::new("Instruments not found".to_string()))).await;
-                return ;
+            let Some(raw_instruments) = app.instruments_ns_reader.get_table_snapshot_as_vec().await
+            else {
+                app.signalr_message_sender
+                    .send_message(
+                        connection,
+                        SignalROutcomeMessage::Error(SignalRError::new(
+                            "Instruments not found".to_string(),
+                        )),
+                    )
+                    .await;
+                return;
             };
 
             let mut instruments: HashMap<String, Arc<TradingInstrumentNoSqlEntity>> =
@@ -409,9 +453,20 @@ async fn handle_message(
                 }
             }
 
-            let Some(instruments_groups) = app.instruments_groups_ns_reader.get_table_snapshot_as_vec().await else{
-                app.signalr_message_sender.send_message(connection, SignalROutcomeMessage::Error(SignalRError::new("Instruments groups not found".to_string()))).await;
-                return ;
+            let Some(instruments_groups) = app
+                .instruments_groups_ns_reader
+                .get_table_snapshot_as_vec()
+                .await
+            else {
+                app.signalr_message_sender
+                    .send_message(
+                        connection,
+                        SignalROutcomeMessage::Error(SignalRError::new(
+                            "Instruments groups not found".to_string(),
+                        )),
+                    )
+                    .await;
+                return;
             };
 
             let instruments_groups_to_send: Vec<InstrumentGroupSignalRModel> = instruments_groups
@@ -435,13 +490,35 @@ async fn handle_message(
                     TradingGroupNoSqlEntity::generate_partition_key(),
                     &trading_account.trading_group,
                 )
-                .await else{
-                    app.signalr_message_sender.send_message(connection, SignalROutcomeMessage::Error(SignalRError::new("Trading group not found".to_string()))).await;
-                    return;
-                };
+                .await
+            else {
+                app.signalr_message_sender
+                    .send_message(
+                        connection,
+                        SignalROutcomeMessage::Error(SignalRError::new(
+                            "Trading group not found".to_string(),
+                        )),
+                    )
+                    .await;
+                return;
+            };
 
-            let Some(trading_profile) = app.trading_profile_ns_reader.get_entity(TradingProfileNoSqlEntity::generate_partition_key(), &trading_group.trading_profile_id).await else{
-                app.signalr_message_sender.send_message(connection, SignalROutcomeMessage::Error(SignalRError::new("Trading profile not found".to_string()))).await;
+            let Some(trading_profile) = app
+                .trading_profile_ns_reader
+                .get_entity(
+                    TradingProfileNoSqlEntity::generate_partition_key(),
+                    &trading_group.trading_profile_id,
+                )
+                .await
+            else {
+                app.signalr_message_sender
+                    .send_message(
+                        connection,
+                        SignalROutcomeMessage::Error(SignalRError::new(
+                            "Trading profile not found".to_string(),
+                        )),
+                    )
+                    .await;
                 return;
             };
 
@@ -454,9 +531,9 @@ async fn handle_message(
                 .instruments
                 .iter()
                 .map(|tp_instrument| {
-                    let Some(instrument_model) = instruments.get(&tp_instrument.id) else{
-                    return None;
-                };
+                    let Some(instrument_model) = instruments.get(&tp_instrument.id) else {
+                        return None;
+                    };
 
                     if instrument_model.trading_disabled {
                         return None;
@@ -533,8 +610,21 @@ async fn handle_message(
 
             let active_positions = app
                 .trading_executor
-                .get_active_positions(&trading_account.trader_id, &trading_account.id)
-                .await;
+                .get_account_active_positions(
+                    TradingExecutorGetActivePositionsGrpcRequest {
+                        trader_id: trading_account.trader_id,
+                        account_id: trading_account.id,
+                    },
+                    &my_telemetry,
+                )
+                .await
+                .unwrap();
+
+            let active_positions = if let Some(active_positions) = active_positions {
+                active_positions
+            } else {
+                vec![]
+            };
 
             app.signalr_message_sender
                 .send_message(
@@ -558,7 +648,7 @@ async fn handle_message(
                             / price_change.previous_price
                             * 100.0;
 
-                        let Some(change) = Decimal::from_f64(change) else{
+                        let Some(change) = Decimal::from_f64(change) else {
                             continue;
                         };
 

@@ -1,6 +1,10 @@
 use my_nosql_contracts::TradingInstrumentDayOff;
 
-use crate::{accounts_manager::AccountGrpcModel, AccountSignalRModel, InstumentSignalRDayOffModel, ActivePositionSignalRModel, trading_executor::TradingExecutorActivePositionGrpcModel, SlTpType};
+use crate::{
+    accounts_manager_grpc::AccountGrpcModel,
+    trading_executor_grpc::TradingExecutorActivePositionGrpcModel, AccountSignalRModel,
+    ActivePositionSignalRModel, InstumentSignalRDayOffModel, SlTpType,
+};
 
 impl Into<AccountSignalRModel> for AccountGrpcModel {
     fn into(self) -> AccountSignalRModel {
@@ -31,10 +35,9 @@ impl Into<InstumentSignalRDayOffModel> for TradingInstrumentDayOff {
     }
 }
 
-
 impl Into<ActivePositionSignalRModel> for TradingExecutorActivePositionGrpcModel {
     fn into(self) -> ActivePositionSignalRModel {
-        let mut model = ActivePositionSignalRModel{
+        let mut model = ActivePositionSignalRModel {
             id: self.id,
             investment_amount: self.invest_amount,
             open_price: self.open_price,

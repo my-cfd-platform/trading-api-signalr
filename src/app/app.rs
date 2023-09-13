@@ -9,8 +9,9 @@ use rust_extensions::AppStates;
 use tokio::sync::RwLock;
 
 use crate::{
-    AccountsManagerGrpcClient, BidAskAggregator, SettingsModel, SignalRConnectionContext,
-    SignalRMessageSender, TradingExecutorGrpcClient,
+    settings::{SettingsModel, SettingsReader},
+    AccountsManagerGrpcClient, BidAskAggregator, SignalRConnectionContext, SignalRMessageSender,
+    TradingExecutorGrpcClient,
 };
 
 pub const APP_VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -25,31 +26,30 @@ pub struct AppContext {
     pub trading_profile_ns_reader: Arc<MyNoSqlDataReader<TradingProfileNoSqlEntity>>,
     pub instruments_groups_ns_reader: Arc<MyNoSqlDataReader<TradingInstrumentGroupNoSqlEntity>>,
     pub connections: Arc<SignalrConnectionsList<SignalRConnectionContext>>,
-    pub accounts_manager: Arc<AccountsManagerGrpcClient>,
+    pub accounts_manager: AccountsManagerGrpcClient,
     pub signalr_message_sender: Arc<SignalRMessageSender>,
     pub my_no_sql_connection: MyNoSqlTcpConnection,
     pub app_states: Arc<AppStates>,
     pub bid_ask_aggregator: Arc<RwLock<BidAskAggregator>>,
     pub sb_client: MyServiceBusClient,
-    pub trading_executor: Arc<TradingExecutorGrpcClient>,
+    pub trading_executor: TradingExecutorGrpcClient,
 }
 
 impl AppContext {
-    pub async fn new(settings: Arc<SettingsModel>) -> Self {
+    pub async fn new(settings_reader: &Arc<SettingsReader>) -> Self {
         let connections = Arc::new(SignalrConnectionsList::new());
 
         let my_no_sql_connection = my_no_sql_tcp_reader::MyNoSqlTcpConnection::new(
             format!("{}", crate::app::APP_NAME),
-            settings.clone(),
+            settings_reader.clone(),
         );
 
-        let accounts_manager =
-            Arc::new(AccountsManagerGrpcClient::new(settings.accounts_manager_grpc.clone()).await);
+        let accounts_manager = AccountsManagerGrpcClient::new(settings_reader.clone());
 
         let sb_client = MyServiceBusClient::new(
             APP_NAME,
             APP_VERSION,
-            settings.clone(),
+            settings_reader.clone(),
             my_logger::LOGGER.clone(),
         );
 
@@ -69,9 +69,7 @@ impl AppContext {
             app_states: Arc::new(AppStates::create_initialized()),
             bid_ask_aggregator: Arc::new(RwLock::new(BidAskAggregator::new())),
             sb_client,
-            trading_executor: Arc::new(
-                TradingExecutorGrpcClient::new(settings.trading_executor_url.clone()).await,
-            ),
+            trading_executor: TradingExecutorGrpcClient::new(settings_reader.clone()),
         }
     }
 }

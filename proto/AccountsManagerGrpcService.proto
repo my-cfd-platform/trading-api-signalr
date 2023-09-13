@@ -1,11 +1,19 @@
 syntax = "proto3";
 package accounts_manager;
+import "google/protobuf/empty.proto";
 
 enum AccountsManagerOperationResult{
     Ok = 0;
     AccountNotFound = 1;
     TraderNotFound = 2;
     NotEnoughBalance = 3;
+}
+
+enum UpdateBalanceReason {
+    TradingResult = 0;
+    BalanceCorrection = 1;
+    Deposit = 2;
+    Withdrawal = 3;
 }
 
 message AccountGrpcModel{
@@ -25,6 +33,7 @@ message AccountManagerCreateAccountGrpcRequest{
     string TraderId = 1;
     string Currency = 2;
     string ProcessId = 3;
+    optional string TradingGroupId = 4;
 }
 
 message AccountManagerUpdateAccountBalanceGrpcRequest{
@@ -34,6 +43,12 @@ message AccountManagerUpdateAccountBalanceGrpcRequest{
      string Comment = 4;
      string ProcessId = 5;
      bool AllowNegativeBalance = 6;
+     UpdateBalanceReason Reason = 7;
+     optional string ReferenceTransactionId = 8;
+}
+
+message AccountManagerGetTraderIdByAccountIdGrpcRequest{
+    string AccountId = 1;
 }
 
 message AccountManagerGetClientAccountGrpcRequest{
@@ -43,6 +58,19 @@ message AccountManagerGetClientAccountGrpcRequest{
 
 message AccountManagerGetClientAccountsGrpcRequest{
     string TraderId = 1;
+}
+
+message SearchAccounts{
+    repeated string TraderIds = 1;
+    optional string Currency = 2;
+    optional FromToInt64Model Created = 3;
+    optional FromToInt64Model Balance = 4;
+    optional bool Disabled = 5;
+}
+
+message FromToInt64Model{
+    optional int64 From = 1;
+    optional int64 To = 2;
 }
 
 message AccountManagerUpdateTradingDisabledGrpcRequest{
@@ -57,9 +85,14 @@ message AccountManagerUpdateTradingDisabledGrpcResponse{
     optional accounts_manager.AccountGrpcModel Account = 2;
 }
 
+message AccountManagerUpdateBalanceBalanceGrpcInfo{
+    string OperationId = 1;
+    accounts_manager.AccountGrpcModel Account = 2;
+}
+
 message AccountManagerUpdateAccountBalanceGrpcResponse{
     accounts_manager.AccountsManagerOperationResult Result = 1;
-    optional accounts_manager.AccountGrpcModel Account = 2;
+    optional accounts_manager.AccountManagerUpdateBalanceBalanceGrpcInfo UpdateBalanceInfo = 2;
 }
 
 message AccountManagerGetClientAccountGrpcResponse{
@@ -67,10 +100,17 @@ message AccountManagerGetClientAccountGrpcResponse{
     optional accounts_manager.AccountGrpcModel Account = 2;
 }
 
+message AccountManagerGetTraderIdByAccountIdGrpcResponse{
+    optional string TraderId = 1;
+}
+
 service AccountsManagerGrpcService {
     rpc CreateAccount(accounts_manager.AccountManagerCreateAccountGrpcRequest) returns (accounts_manager.AccountGrpcModel);
     rpc GetClientAccount(accounts_manager.AccountManagerGetClientAccountGrpcRequest) returns (accounts_manager.AccountManagerGetClientAccountGrpcResponse);
     rpc GetClientAccounts(accounts_manager.AccountManagerGetClientAccountsGrpcRequest) returns (stream accounts_manager.AccountGrpcModel);
+    rpc Search(accounts_manager.SearchAccounts) returns (stream accounts_manager.AccountGrpcModel);
+    rpc GetTraderIdByAccountId(accounts_manager.AccountManagerGetTraderIdByAccountIdGrpcRequest) returns (AccountManagerGetTraderIdByAccountIdGrpcResponse);
     rpc UpdateClientAccountBalance(accounts_manager.AccountManagerUpdateAccountBalanceGrpcRequest) returns (accounts_manager.AccountManagerUpdateAccountBalanceGrpcResponse);
     rpc UpdateAccountTradingDisabled(accounts_manager.AccountManagerUpdateTradingDisabledGrpcRequest) returns (accounts_manager.AccountManagerUpdateTradingDisabledGrpcResponse);
+    rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }

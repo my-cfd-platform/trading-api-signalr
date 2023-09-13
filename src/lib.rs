@@ -1,18 +1,19 @@
 mod app;
-mod signalr;
+mod bg;
 mod grpc_clients;
 mod services;
-mod bg;
+mod settings;
+mod signalr;
 
-pub mod accounts_manager {
+pub mod accounts_manager_grpc {
     tonic::include_proto!("accounts_manager");
 }
-pub mod trading_executor {
+pub mod trading_executor_grpc {
     tonic::include_proto!("trading_executor");
 }
 
 pub use app::*;
 pub use bg::*;
-pub use signalr::*;
-pub use services::*;
 pub use grpc_clients::*;
+pub use services::*;
+pub use signalr::*;

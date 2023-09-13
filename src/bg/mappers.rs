@@ -1,6 +1,8 @@
 use cfd_engine_sb_contracts::{AccountSbModel, OrderSbModel, PositionPersistenceEvent};
 
-use crate::{AccountSignalRModel, ActivePositionSignalRModel, ActivePositionSignalRSideModel, SlTpType};
+use crate::{
+    AccountSignalRModel, ActivePositionSignalRModel, ActivePositionSignalRSideModel, SlTpType,
+};
 
 pub enum SbPositionPersistenceUpdateType {
     Create(OrderSbModel),
@@ -9,7 +11,7 @@ pub enum SbPositionPersistenceUpdateType {
 }
 
 impl SbPositionPersistenceUpdateType {
-    pub fn extract_trader_id(&self) -> &str{
+    pub fn extract_trader_id(&self) -> &str {
         match self {
             SbPositionPersistenceUpdateType::Create(order) => &order.trader_id,
             SbPositionPersistenceUpdateType::Update(order) => &order.trader_id,

@@ -4,8 +4,10 @@ use cfd_engine_sb_contracts::PositionPersistenceEvent;
 use my_service_bus_abstractions::subscriber::{
     MessagesReader, MySbSubscriberHandleError, SubscriberCallback,
 };
+use my_telemetry::MyTelemetryContext;
 
 use crate::{
+    trading_executor_grpc::TradingExecutorGetActivePositionsGrpcRequest,
     ActivePositionSignalRModel, AppContext, SbPositionPersistenceUpdateType,
     SignalRMessageWrapperWithAccount, SignalROutcomeMessage, USER_ID_TAG,
 };
@@ -32,10 +34,14 @@ impl SubscriberCallback<PositionPersistenceEvent> for PositionsUpdateListener {
 
             let trader_id = operation.extract_trader_id();
 
-            let Some(connections) = self.app.connections
-                .get_tagged_connections_with_value(USER_ID_TAG, &trader_id).await else{
-                    continue;
-                };
+            let Some(connections) = self
+                .app
+                .connections
+                .get_tagged_connections_with_value(USER_ID_TAG, &trader_id)
+                .await
+            else {
+                continue;
+            };
 
             let mut messages_to_send = vec![];
 
@@ -107,8 +113,20 @@ async fn generate_positions_snapshot_message(
 ) -> SignalROutcomeMessage {
     let account_active_positions = app
         .trading_executor
-        .get_active_positions(trader_id, account_id)
-        .await;
+        .get_account_active_positions(
+            TradingExecutorGetActivePositionsGrpcRequest {
+                trader_id: trader_id.to_string(),
+                account_id: account_id.to_string(),
+            },
+            &MyTelemetryContext::new(),
+        )
+        .await
+        .unwrap();
+
+    let account_active_positions = match account_active_positions {
+        Some(result) => result,
+        None => vec![],
+    };
 
     return SignalROutcomeMessage::ActivePositions(SignalRMessageWrapperWithAccount::new(
         account_active_positions
