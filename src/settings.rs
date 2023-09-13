@@ -15,6 +15,12 @@ pub struct SettingsModel {
     pub sb_tcp: String,
     #[serde(rename = "TradingExecutorGrpcUrl")]
     pub trading_executor_url: String,
+
+    #[serde(rename = "MyTelemetry")]
+    pub my_telemetry: String,
+
+    #[serde(rename = "SeqConnString")]
+    pub seq_conn_string: String,
 }
 
 #[async_trait::async_trait]
@@ -30,6 +36,22 @@ impl MyServiceBusSettings for SettingsReader {
     async fn get_host_port(&self) -> String {
         let read_access = self.settings.read().await;
         read_access.sb_tcp.clone()
+    }
+}
+
+#[async_trait::async_trait]
+impl my_telemetry_writer::MyTelemetrySettings for SettingsReader {
+    async fn get_telemetry_url(&self) -> String {
+        let read_access = self.settings.read().await;
+        read_access.my_telemetry.clone()
+    }
+}
+
+#[async_trait::async_trait]
+impl my_seq_logger::SeqSettings for SettingsReader {
+    async fn get_conn_string(&self) -> String {
+        let read_access = self.settings.read().await;
+        read_access.seq_conn_string.clone()
     }
 }
 

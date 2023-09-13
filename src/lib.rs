@@ -2,7 +2,7 @@ mod app;
 mod bg;
 mod grpc_clients;
 mod services;
-mod settings;
+pub mod settings;
 mod signalr;
 
 pub mod accounts_manager_grpc {

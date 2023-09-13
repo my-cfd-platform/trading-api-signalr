@@ -1,13 +1,14 @@
+use my_seq_logger::SeqLogger;
 use rust_extensions::MyTimer;
 use std::sync::Arc;
 use trading_api_signalr::{
-    setup_server, AccountsUpdatesListener, AppContext, PositionsUpdateListener, PriceSendTimer,
-    PricesListener, SettingsReader, APP_NAME,
+    settings::SettingsReader, setup_server, AccountsUpdatesListener, AppContext,
+    PositionsUpdateListener, PriceSendTimer, PricesListener, APP_NAME, APP_VERSION,
 };
 
 #[tokio::main]
 async fn main() {
-    let settings_reader = super::settings::SettingsReader::new(".my-cfd").await;
+    let settings_reader = SettingsReader::new(".my-cfd").await;
     let settings_reader = Arc::new(settings_reader);
     let mut send_prices_timer = MyTimer::new(std::time::Duration::from_millis(300));
 
@@ -16,13 +17,11 @@ async fn main() {
     SeqLogger::enable_from_connection_string(settings_reader.clone());
 
     my_logger::LOGGER
-        .populate_app_and_version(crate::app::APP_NAME, crate::app::APP_VERSION)
+        .populate_app_and_version(APP_NAME, APP_VERSION)
         .await;
 
-    let telemetry_writer = my_telemetry_writer::MyTelemetryWriter::new(
-        app::APP_NAME.to_string(),
-        settings_reader.clone(),
-    );
+    let telemetry_writer =
+        my_telemetry_writer::MyTelemetryWriter::new(APP_NAME.to_string(), settings_reader.clone());
 
     send_prices_timer.register_timer("send prices", Arc::new(PriceSendTimer::new(app.clone())));
 
@@ -52,6 +51,7 @@ async fn main() {
 
     send_prices_timer.start(app.app_states.clone(), my_logger::LOGGER.clone());
     app.sb_client.start().await;
+    telemetry_writer.start(app.app_states.clone(), my_logger::LOGGER.clone());
     setup_server(app.clone());
     app.my_no_sql_connection
         .start(my_logger::LOGGER.clone())

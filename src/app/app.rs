@@ -9,9 +9,8 @@ use rust_extensions::AppStates;
 use tokio::sync::RwLock;
 
 use crate::{
-    settings::{SettingsModel, SettingsReader},
-    AccountsManagerGrpcClient, BidAskAggregator, SignalRConnectionContext, SignalRMessageSender,
-    TradingExecutorGrpcClient,
+    settings::SettingsReader, AccountsManagerGrpcClient, BidAskAggregator,
+    SignalRConnectionContext, SignalRMessageSender, TradingExecutorGrpcClient,
 };
 
 pub const APP_VERSION: &'static str = env!("CARGO_PKG_VERSION");
