@@ -38,8 +38,9 @@ impl SignalRPingMessageProcessor {
         &self,
         message: SignalRIncomeMessage,
         connection: &Arc<MySignalrConnection<SignalRConnectionContext>>,
+        ctx: &MyTelemetryContext,
     ) {
-        handle_message(&self.app_context, message, connection).await;
+        handle_message(&self.app_context, message, connection, ctx).await;
     }
 }
 
@@ -52,8 +53,9 @@ impl MySignalrActionCallbacks<SignalREmptyMessage> for SignalRPingMessageProcess
         connection: &Arc<MySignalrConnection<Self::TCtx>>,
         _: Option<HashMap<String, String>>,
         _: SignalREmptyMessage,
+        ctx: &MyTelemetryContext,
     ) {
-        self.handle_message(SignalRIncomeMessage::Ping, connection)
+        self.handle_message(SignalRIncomeMessage::Ping, connection, ctx)
             .await;
     }
 }
@@ -71,8 +73,9 @@ impl MySignalrActionCallbacks<SignalRInitAction> for SignalRInitMessageProcessor
         connection: &Arc<MySignalrConnection<Self::TCtx>>,
         _: Option<HashMap<String, String>>,
         data: SignalRInitAction,
+        ctx: &MyTelemetryContext,
     ) {
-        self.handle_message(SignalRIncomeMessage::Init(data), connection)
+        self.handle_message(SignalRIncomeMessage::Init(data), connection, ctx)
             .await;
     }
 }
@@ -104,8 +107,9 @@ impl SignalRSetActiveAccountMessageProcessor {
         &self,
         message: SignalRIncomeMessage,
         connection: &Arc<MySignalrConnection<SignalRConnectionContext>>,
+        ctx: &MyTelemetryContext,
     ) {
-        handle_message(&self.app_context, message, connection).await;
+        handle_message(&self.app_context, message, connection, ctx).await;
     }
 }
 
@@ -120,11 +124,13 @@ impl MySignalrActionCallbacks<SignalRSetActiveAccountMessage>
         connection: &Arc<MySignalrConnection<Self::TCtx>>,
         _: Option<HashMap<String, String>>,
         data: SignalRSetActiveAccountMessage,
+        ctx: &MyTelemetryContext,
     ) {
         connection.ctx.set_active_account(&data.account_id).await;
         self.handle_message(
             SignalRIncomeMessage::SetActiveAccount(SetActiveAccountCommand::new(data.account_id)),
             connection,
+            ctx,
         )
         .await;
     }
@@ -139,8 +145,9 @@ impl SignalRInitMessageProcessor {
         &self,
         message: SignalRIncomeMessage,
         connection: &Arc<MySignalrConnection<SignalRConnectionContext>>,
+        ctx: &MyTelemetryContext,
     ) {
-        handle_message(&self.app_context, message, connection).await;
+        handle_message(&self.app_context, message, connection, ctx).await;
     }
 }
 
@@ -335,13 +342,10 @@ async fn handle_message(
     app: &Arc<AppContext>,
     message: SignalRIncomeMessage,
     connection: &Arc<MySignalrConnection<SignalRConnectionContext>>,
+    ctx: &MyTelemetryContext,
 ) {
     match message {
         SignalRIncomeMessage::Init(token) => {
-            let my_telemetry = MyTelemetryContext::new();
-
-            let _ = my_telemetry.start_event_tracking("SignalR Init");
-
             let session = app
                 .sessions_ns_reader
                 .get_entity(&SessionEntity::get_pk(), &token.token)
@@ -374,7 +378,7 @@ async fn handle_message(
                     AccountManagerGetClientAccountsGrpcRequest {
                         trader_id: session.trader_id.to_string(),
                     },
-                    &my_telemetry,
+                    ctx,
                 )
                 .await
                 .unwrap();
@@ -394,10 +398,6 @@ async fn handle_message(
                 .await;
         }
         SignalRIncomeMessage::SetActiveAccount(set_account_message) => {
-            let my_telemetry = MyTelemetryContext::new();
-
-            let _ = my_telemetry.start_event_tracking("SetActiveAccount");
-
             connection
                 .ctx
                 .set_active_account(&set_account_message.account_id)
@@ -414,7 +414,7 @@ async fn handle_message(
                         trader_id: client_data.trader_id.unwrap(),
                         account_id: client_data.active_account_id.unwrap(),
                     },
-                    &my_telemetry,
+                    ctx,
                 )
                 .await
                 .unwrap();
@@ -615,7 +615,7 @@ async fn handle_message(
                         trader_id: trading_account.trader_id,
                         account_id: trading_account.id,
                     },
-                    &my_telemetry,
+                    ctx,
                 )
                 .await
                 .unwrap();
