@@ -61,7 +61,7 @@ impl From<OrderSbModel> for ActivePositionSignalRModel {
         let mut model = Self {
             id: src.id,
             investment_amount: src.invest_amount,
-            open_price: src.open_price,
+            open_price: src.asset_open_price,
             open_date: src.open_date,
             instrument: src.asset_pair,
             multiplier: src.leverage,
