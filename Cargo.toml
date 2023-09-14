@@ -30,8 +30,12 @@ my-settings-reader = { tag = "0.1.5", git = "https://github.com/MyJetTools/my-se
 my-no-sql-tcp-reader = { tag = "0.2.0", git = "https://github.com/MyJetTools/my-no-sql-tcp-reader.git" }
 my-no-sql-data-writer = { tag = "0.3.0", git = "https://github.com/MyJetTools/my-no-sql-data-writer.git" }
 my-nosql-contracts = { tag = "0.1.16", git = "https://github.com/my-cfd-platform/my-nosql-contracts.git" }
-my-grpc-extensions = { tag = "0.4.0", git = "https://github.com/MyJetTools/my-grpc-extensions.git" }
-my-grpc-client-macros = { tag = "0.1.0", git = "https://github.com/MyJetTools/my-grpc-client-macros.git" }
+my-grpc-extensions = { tag = "0.4.1", git = "https://github.com/MyJetTools/my-grpc-extensions.git", features = [
+    "with-telemetry",
+] }
+my-grpc-client-macros = { tag = "0.1.1", git = "https://github.com/MyJetTools/my-grpc-client-macros.git", features = [
+    "with-telemetry",
+] }
 
 flurl = { tag = "0.4.0", git = "https://github.com/MyJetTools/fl-url.git" }
 

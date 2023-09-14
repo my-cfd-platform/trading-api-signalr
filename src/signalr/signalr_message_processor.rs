@@ -5,10 +5,10 @@ use my_nosql_contracts::{
     TradingInstrumentNoSqlEntity, TradingProfileNoSqlEntity,
 };
 use my_signalr_middleware::{
-    MySignalrActionCallbacks, MySignalrConnection, SignalRPublshersBuilder,
+    MySignalrActionCallbacks, MySignalrConnection, SignalRPublshersBuilder, SignalRTelemetry,
     SignalrContractDeserializer, SignalrMessagePublisher,
 };
-use my_telemetry::MyTelemetryContext;
+
 use rest_api_wl_shared::middlewares::SessionEntity;
 use rust_decimal::{
     prelude::{FromPrimitive, ToPrimitive},
@@ -38,7 +38,7 @@ impl SignalRPingMessageProcessor {
         &self,
         message: SignalRIncomeMessage,
         connection: &Arc<MySignalrConnection<SignalRConnectionContext>>,
-        ctx: &MyTelemetryContext,
+        ctx: &mut SignalRTelemetry,
     ) {
         handle_message(&self.app_context, message, connection, ctx).await;
     }
@@ -53,7 +53,7 @@ impl MySignalrActionCallbacks<SignalREmptyMessage> for SignalRPingMessageProcess
         connection: &Arc<MySignalrConnection<Self::TCtx>>,
         _: Option<HashMap<String, String>>,
         _: SignalREmptyMessage,
-        ctx: &MyTelemetryContext,
+        ctx: &mut SignalRTelemetry,
     ) {
         self.handle_message(SignalRIncomeMessage::Ping, connection, ctx)
             .await;
@@ -73,7 +73,7 @@ impl MySignalrActionCallbacks<SignalRInitAction> for SignalRInitMessageProcessor
         connection: &Arc<MySignalrConnection<Self::TCtx>>,
         _: Option<HashMap<String, String>>,
         data: SignalRInitAction,
-        ctx: &MyTelemetryContext,
+        ctx: &mut SignalRTelemetry,
     ) {
         self.handle_message(SignalRIncomeMessage::Init(data), connection, ctx)
             .await;
@@ -107,7 +107,7 @@ impl SignalRSetActiveAccountMessageProcessor {
         &self,
         message: SignalRIncomeMessage,
         connection: &Arc<MySignalrConnection<SignalRConnectionContext>>,
-        ctx: &MyTelemetryContext,
+        ctx: &mut SignalRTelemetry,
     ) {
         handle_message(&self.app_context, message, connection, ctx).await;
     }
@@ -124,13 +124,13 @@ impl MySignalrActionCallbacks<SignalRSetActiveAccountMessage>
         connection: &Arc<MySignalrConnection<Self::TCtx>>,
         _: Option<HashMap<String, String>>,
         data: SignalRSetActiveAccountMessage,
-        ctx: &MyTelemetryContext,
+        telemetry: &mut SignalRTelemetry,
     ) {
         connection.ctx.set_active_account(&data.account_id).await;
         self.handle_message(
             SignalRIncomeMessage::SetActiveAccount(SetActiveAccountCommand::new(data.account_id)),
             connection,
-            ctx,
+            telemetry,
         )
         .await;
     }
@@ -145,7 +145,7 @@ impl SignalRInitMessageProcessor {
         &self,
         message: SignalRIncomeMessage,
         connection: &Arc<MySignalrConnection<SignalRConnectionContext>>,
-        ctx: &MyTelemetryContext,
+        ctx: &mut SignalRTelemetry,
     ) {
         handle_message(&self.app_context, message, connection, ctx).await;
     }
@@ -342,7 +342,7 @@ async fn handle_message(
     app: &Arc<AppContext>,
     message: SignalRIncomeMessage,
     connection: &Arc<MySignalrConnection<SignalRConnectionContext>>,
-    ctx: &MyTelemetryContext,
+    ctx: &mut SignalRTelemetry,
 ) {
     match message {
         SignalRIncomeMessage::Init(token) => {
@@ -363,6 +363,7 @@ async fn handle_message(
 
                 return;
             };
+            ctx.add_tag("user_id", session.trader_id.to_string());
             connection.ctx.set_trader_id(&session.trader_id).await;
             println!(
                 "Init after auth. Ctx: {:#?}, Message: {:#?}",
@@ -378,7 +379,7 @@ async fn handle_message(
                     AccountManagerGetClientAccountsGrpcRequest {
                         trader_id: session.trader_id.to_string(),
                     },
-                    ctx,
+                    ctx.get_ctx(),
                 )
                 .await
                 .unwrap();
@@ -407,14 +408,19 @@ async fn handle_message(
                 "Set active account. Ctx: {:#?}, Message: {:#?}",
                 connection.ctx, set_account_message
             );
+
+            let trader_id = client_data.trader_id.unwrap();
+
+            ctx.add_tag("user_id", trader_id.to_string());
+
             let response = app
                 .accounts_manager
                 .get_client_account(
                     AccountManagerGetClientAccountGrpcRequest {
-                        trader_id: client_data.trader_id.unwrap(),
+                        trader_id,
                         account_id: client_data.active_account_id.unwrap(),
                     },
-                    ctx,
+                    ctx.get_ctx(),
                 )
                 .await
                 .unwrap();
@@ -615,7 +621,7 @@ async fn handle_message(
                         trader_id: trading_account.trader_id,
                         account_id: trading_account.id,
                     },
-                    ctx,
+                    ctx.get_ctx(),
                 )
                 .await
                 .unwrap();
