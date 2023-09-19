@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use rust_extensions::MyTimerTick;
+use service_sdk::async_trait;
 
 use crate::{AppContext, BidAskSignalRModel, SignalRMessageWrapper, SignalROutcomeMessage};
 

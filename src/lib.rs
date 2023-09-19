@@ -17,3 +17,4 @@ pub use bg::*;
 pub use grpc_clients::*;
 pub use services::*;
 pub use signalr::*;
+pub use settings::*;

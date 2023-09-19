@@ -1,7 +1,7 @@
 use crate::{
     AccountSignalRModel, ActivePositionSignalRModel, BidAskSignalRModel, InstrumentSignalRModel,
-    PriceChangeSignalRModel, SetActiveAccountCommand, SignalRError, SignalRInitAction,
-    SignalRMessageWrapper, SignalRMessageWrapperEmpty, SignalRMessageWrapperWithAccount, InstrumentGroupSignalRModel,
+    PriceChangeSignalRModel, SetActiveAccountCommand, SignalRInitAction,
+    SignalRMessageWrapper, SignalRMessageWrapperEmpty, SignalRMessageWrapperWithAccount, InstrumentGroupSignalRModel, SignalRErrorMessage,
 };
 
 pub enum SignalRIncomeMessage {
@@ -22,6 +22,6 @@ pub enum SignalROutcomeMessage {
     BidAsk(SignalRMessageWrapper<Vec<BidAskSignalRModel>>),
     PositionUpdate(SignalRMessageWrapperWithAccount<ActivePositionSignalRModel>),
     ActivePositions(SignalRMessageWrapperWithAccount<Vec<ActivePositionSignalRModel>>),
-    Error(SignalRError),
+    Error(SignalRErrorMessage),
     Pong(SignalRMessageWrapperEmpty),
 }

@@ -1,10 +1,12 @@
 use std::sync::Arc;
 
 use cfd_engine_sb_contracts::PositionPersistenceEvent;
-use my_service_bus_abstractions::subscriber::{
-    MessagesReader, MySbSubscriberHandleError, SubscriberCallback,
+use service_sdk::{
+    async_trait,
+    my_service_bus::abstractions::subscriber::{
+        MessagesReader, MySbSubscriberHandleError, SubscriberCallback,
+    }, my_telemetry::MyTelemetryContext,
 };
-use my_telemetry::MyTelemetryContext;
 
 use crate::{
     trading_executor_grpc::TradingExecutorGetActivePositionsGrpcRequest,

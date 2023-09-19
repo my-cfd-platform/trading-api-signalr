@@ -1,8 +1,11 @@
 use std::sync::Arc;
 
 use cfd_engine_sb_contracts::AccountBalanceUpdateSbModel;
-use my_service_bus_abstractions::subscriber::{
-    MessagesReader, MySbSubscriberHandleError, SubscriberCallback,
+use service_sdk::{
+    async_trait,
+    my_service_bus::abstractions::subscriber::{
+        MessagesReader, MySbSubscriberHandleError, SubscriberCallback,
+    },
 };
 
 use crate::{AccountSignalRModel, AppContext, SignalRMessageWrapper, USER_ID_TAG};
