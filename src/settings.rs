@@ -25,7 +25,7 @@ impl SettingsReader {
 
     pub async fn get_trading_executor_grpc(&self) -> Arc<GrpcUrl> {
         let read_access = self.settings.read().await;
-        return Arc::new(GrpcUrl::new(read_access.accounts_manager_grpc.clone()));
+        return Arc::new(GrpcUrl::new(read_access.trading_executor_url.clone()));
     }
 }
 
@@ -38,7 +38,7 @@ impl GrpcUrl {
 }
 
 #[async_trait::async_trait]
-impl service_sdk::my_logger::my_seq_logger::SeqSettings for SettingsReader {
+impl SeqSettings for SettingsReader {
     async fn get_conn_string(&self) -> String {
         let read_access = self.settings.read().await;
         read_access.seq_conn_string.clone()
@@ -71,7 +71,7 @@ impl MyServiceBusSettings for SettingsReader {
 
 
 #[async_trait::async_trait]
-impl service_sdk::my_telemetry::my_telemetry_writer::MyTelemetrySettings for SettingsReader {
+impl MyTelemetrySettings for SettingsReader {
     async fn get_telemetry_url(&self) -> String {
         let read_access = self.settings.read().await;
         read_access.my_telemetry.clone()
