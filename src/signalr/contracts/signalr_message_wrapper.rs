@@ -1,5 +1,5 @@
-use my_signalr_middleware::{SignalrContractDeserializer, SignalrContractSerializer};
 use serde::{Deserialize, Serialize};
+use service_sdk::my_http_server::signalr::{SignalrContractDeserializer, SignalrContractSerializer};
 
 #[derive(Serialize, Debug, Clone)]
 pub struct SignalREmptyMessage();

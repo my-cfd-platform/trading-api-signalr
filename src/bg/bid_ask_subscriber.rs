@@ -1,7 +1,12 @@
 use std::sync::Arc;
 
 use cfd_engine_sb_contracts::BidAskSbModel;
-use my_service_bus_abstractions::subscriber::{SubscriberCallback, MessagesReader, MySbSubscriberHandleError};
+use service_sdk::{
+    async_trait,
+    my_service_bus::abstractions::subscriber::{
+        MessagesReader, MySbSubscriberHandleError, SubscriberCallback,
+    },
+};
 
 use crate::AppContext;
 

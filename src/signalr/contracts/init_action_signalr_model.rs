@@ -1,5 +1,6 @@
-use my_signalr_middleware::SignalrContractDeserializer;
+
 use serde::{Deserialize, Serialize};
+use service_sdk::my_http_server::signalr::SignalrContractDeserializer;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]

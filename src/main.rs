@@ -1,61 +1,42 @@
-use rust_extensions::MyTimer;
 use std::sync::Arc;
+
+use rust_extensions::MyTimer;
 use trading_api_signalr::{
-    setup_server, AccountsUpdatesListener, AppContext, PositionsUpdateListener, PriceSendTimer,
-    PricesListener, SettingsReader, APP_NAME,
+    AccountsUpdatesListener, AppContext, PositionsUpdateListener, PriceSendTimer, PricesListener,
+    SettingsReader, setup_signal_r,
 };
 
 #[tokio::main]
 async fn main() {
-    let settings_reader = super::settings::SettingsReader::new(".my-cfd").await;
+    let settings_reader = SettingsReader::new(".my-cfd-platform").await;
     let settings_reader = Arc::new(settings_reader);
-    let mut send_prices_timer = MyTimer::new(std::time::Duration::from_millis(300));
 
-    let app = Arc::new(AppContext::new(&settings_reader).await);
+    let mut service_context = service_sdk::ServiceContext::new(settings_reader.clone()).await;
 
-    SeqLogger::enable_from_connection_string(settings_reader.clone());
+    let app_context = Arc::new(AppContext::new(&settings_reader, &service_context).await);
 
-    my_logger::LOGGER
-        .populate_app_and_version(crate::app::APP_NAME, crate::app::APP_VERSION)
-        .await;
+    service_context.register_sb_subscribe(
+        Arc::new(PricesListener::new(app_context.clone())),
+        service_sdk::my_service_bus::abstractions::subscriber::TopicQueueType::DeleteOnDisconnect,
+    ).await;
 
-    let telemetry_writer = my_telemetry_writer::MyTelemetryWriter::new(
-        app::APP_NAME.to_string(),
-        settings_reader.clone(),
+    service_context.register_sb_subscribe(
+        Arc::new(AccountsUpdatesListener::new(app_context.clone())),
+        service_sdk::my_service_bus::abstractions::subscriber::TopicQueueType::DeleteOnDisconnect,
+    ).await;
+
+    service_context.register_sb_subscribe(
+        Arc::new(PositionsUpdateListener::new(app_context.clone())),
+        service_sdk::my_service_bus::abstractions::subscriber::TopicQueueType::DeleteOnDisconnect,
+    ).await;
+
+    service_context.register_background_job(
+        std::time::Duration::from_millis(300),
+        "prices-sender",
+        Arc::new(PriceSendTimer::new(app_context.clone())),
     );
 
-    send_prices_timer.register_timer("send prices", Arc::new(PriceSendTimer::new(app.clone())));
+    setup_signal_r(app_context.clone(), &mut service_context);
 
-    app.sb_client
-        .subscribe(
-            APP_NAME.to_string(),
-            my_service_bus_abstractions::subscriber::TopicQueueType::DeleteOnDisconnect,
-            Arc::new(PricesListener::new(app.clone())),
-        )
-        .await;
-
-    app.sb_client
-        .subscribe(
-            APP_NAME.to_string(),
-            my_service_bus_abstractions::subscriber::TopicQueueType::DeleteOnDisconnect,
-            Arc::new(AccountsUpdatesListener::new(app.clone())),
-        )
-        .await;
-
-    app.sb_client
-        .subscribe(
-            APP_NAME.to_string(),
-            my_service_bus_abstractions::subscriber::TopicQueueType::DeleteOnDisconnect,
-            Arc::new(PositionsUpdateListener::new(app.clone())),
-        )
-        .await;
-
-    send_prices_timer.start(app.app_states.clone(), my_logger::LOGGER.clone());
-    app.sb_client.start().await;
-    setup_server(app.clone());
-    app.my_no_sql_connection
-        .start(my_logger::LOGGER.clone())
-        .await;
-
-    app.app_states.wait_until_shutdown().await;
+    service_context.start_application().await;
 }
