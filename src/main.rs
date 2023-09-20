@@ -1,9 +1,8 @@
 use std::sync::Arc;
 
-use rust_extensions::MyTimer;
 use trading_api_signalr::{
-    AccountsUpdatesListener, AppContext, PositionsUpdateListener, PriceSendTimer, PricesListener,
-    SettingsReader, setup_signal_r,
+    setup_signal_r, AccountsUpdatesListener, AppContext, PositionsUpdateListener, PriceSendTimer,
+    PricesListener, SettingsReader,
 };
 
 #[tokio::main]
