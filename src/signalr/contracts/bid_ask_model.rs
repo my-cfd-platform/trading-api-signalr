@@ -1,5 +1,6 @@
 use cfd_engine_sb_contracts::BidAskSbModel;
 use serde::{Deserialize, Serialize};
+service_sdk::macros::use_signal_r_json_contract!();
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -27,6 +28,14 @@ impl BidAskSignalRModel {
             dir,
         }
     }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[signal_r_json_contract("bidask")]
+pub struct BidAsksSignalRModel {
+    pub now: i64,
+    pub data: Vec<BidAskSignalRModel>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

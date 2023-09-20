@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
-use service_sdk::my_http_server::signalr::SignalrContractSerializer;
 
+service_sdk::macros::use_signal_r_json_contract!();
 pub enum SignalRError {
     SessionNotFound,
     AccountsNotFound,
@@ -60,6 +60,7 @@ impl SignalRError {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[signal_r_json_contract("servererror")]
 pub struct SignalRErrorMessage {
     pub error: String,
 }
@@ -67,12 +68,5 @@ pub struct SignalRErrorMessage {
 impl SignalRErrorMessage {
     pub fn new(error: String) -> Self {
         Self { error }
-    }
-}
-
-impl SignalrContractSerializer for SignalRErrorMessage {
-    fn serialize(self) -> Vec<Vec<u8>> {
-        let json = serde_json::to_vec(&self);
-        return vec![json.unwrap()];
     }
 }

@@ -3,15 +3,17 @@ use std::sync::Arc;
 use cfd_engine_sb_contracts::PositionPersistenceEvent;
 use service_sdk::{
     async_trait,
+    my_logger::LogEventCtx,
     my_service_bus::abstractions::subscriber::{
         MessagesReader, MySbSubscriberHandleError, SubscriberCallback,
-    }, my_telemetry::MyTelemetryContext,
+    },
+    my_telemetry::MyTelemetryContext,
 };
 
 use crate::{
     trading_executor_grpc::TradingExecutorGetActivePositionsGrpcRequest,
-    ActivePositionSignalRModel, AppContext, SbPositionPersistenceUpdateType,
-    SignalRMessageWrapperWithAccount, SignalROutcomeMessage, USER_ID_TAG,
+    utils::init_signal_r_contract_now, ActivePositionSignalRModel, ActivePositionsSignalRModel,
+    AppContext, UpdateActivePositionSignalRModel, USER_ID_TAG,
 };
 
 pub struct PositionsUpdateListener {
@@ -31,10 +33,22 @@ impl SubscriberCallback<PositionPersistenceEvent> for PositionsUpdateListener {
         messages_reader: &mut MessagesReader<PositionPersistenceEvent>,
     ) -> Result<(), MySbSubscriberHandleError> {
         while let Some(message) = messages_reader.get_next_message() {
-            let operation: SbPositionPersistenceUpdateType =
-                SbPositionPersistenceUpdateType::from(message.take_message());
+            let event = message.take_message();
 
-            let trader_id = operation.extract_trader_id();
+            let trader_id = get_trader_id(&event);
+
+            if trader_id.is_none() {
+                service_sdk::my_logger::LOGGER.write_error(
+                    "SubscriberCallback<PositionPersistenceEvent>::handle_messages",
+                    "Somehow traderId is not found",
+                    LogEventCtx::new()
+                        .add("Process", event.process_id)
+                        .add("SbMessageId", message.id.to_string()),
+                );
+                continue;
+            }
+
+            let trader_id = trader_id.unwrap();
 
             let Some(connections) = self
                 .app
@@ -45,8 +59,77 @@ impl SubscriberCallback<PositionPersistenceEvent> for PositionsUpdateListener {
                 continue;
             };
 
-            let mut messages_to_send = vec![];
+            if let Some(order_sb_model) = event.create_position {
+                let account_id = order_sb_model.account_id.to_string();
+                let positions = generate_positions_snapshot_message(
+                    &self.app,
+                    &order_sb_model.trader_id,
+                    &account_id,
+                )
+                .await;
 
+                for connection in &connections {
+                    self.app
+                        .signal_r_message_sender
+                        .active_position_publisher
+                        .send_to_connection(
+                            &connection,
+                            ActivePositionsSignalRModel {
+                                now: init_signal_r_contract_now(),
+                                data: positions.clone(),
+                                account_id: account_id.clone(),
+                            },
+                        )
+                        .await;
+                }
+            }
+
+            if let Some(order_sb_model) = event.close_position {
+                let account_id = order_sb_model.account_id.to_string();
+                let positions = generate_positions_snapshot_message(
+                    &self.app,
+                    &order_sb_model.trader_id,
+                    &account_id,
+                )
+                .await;
+
+                for connection in &connections {
+                    self.app
+                        .signal_r_message_sender
+                        .active_position_publisher
+                        .send_to_connection(
+                            &connection,
+                            ActivePositionsSignalRModel {
+                                now: init_signal_r_contract_now(),
+                                data: positions.clone(),
+                                account_id: account_id.clone(),
+                            },
+                        )
+                        .await;
+                }
+            }
+
+            if let Some(order_sb_model) = event.update_position {
+                let position: ActivePositionSignalRModel = order_sb_model.into();
+
+                for connection in &connections {
+                    self.app
+                        .signal_r_message_sender
+                        .position_update_publisher
+                        .send_to_connection(
+                            &connection,
+                            UpdateActivePositionSignalRModel {
+                                now: init_signal_r_contract_now(),
+                                data: position.clone(),
+                            },
+                        )
+                        .await;
+                }
+            }
+
+            //let mut messages_to_send = vec![];
+
+            /*
             match operation {
                 SbPositionPersistenceUpdateType::Create(order) => {
                     messages_to_send.push(SignalROutcomeMessage::PositionUpdate(
@@ -94,25 +177,35 @@ impl SubscriberCallback<PositionPersistenceEvent> for PositionsUpdateListener {
                 }
             };
 
-            for connection in connections {
-                for message in &messages_to_send {
-                    self.app
-                        .signalr_message_sender
-                        .send_message(&connection, message.clone())
-                        .await;
-                }
-            }
+
+            */
         }
 
         return Ok(());
     }
 }
 
+fn get_trader_id(event: &PositionPersistenceEvent) -> Option<&str> {
+    if let Some(sb_model) = &event.create_position {
+        return Some(&sb_model.trader_id);
+    }
+
+    if let Some(sb_model) = &event.update_position {
+        return Some(&sb_model.trader_id);
+    }
+
+    if let Some(sb_model) = &event.close_position {
+        return Some(&sb_model.trader_id);
+    }
+
+    None
+}
+
 async fn generate_positions_snapshot_message(
     app: &Arc<AppContext>,
     trader_id: &str,
     account_id: &str,
-) -> SignalROutcomeMessage {
+) -> Vec<ActivePositionSignalRModel> {
     let account_active_positions = app
         .trading_executor
         .get_account_active_positions(
@@ -130,11 +223,8 @@ async fn generate_positions_snapshot_message(
         None => vec![],
     };
 
-    return SignalROutcomeMessage::ActivePositions(SignalRMessageWrapperWithAccount::new(
-        account_active_positions
-            .iter()
-            .map(|x| x.to_owned().into())
-            .collect(),
-        &account_id,
-    ));
+    account_active_positions
+        .into_iter()
+        .map(|x| x.into())
+        .collect()
 }

@@ -1,10 +1,14 @@
+service_sdk::macros::use_signal_r_json_contract!();
+use rust_extensions::date_time::DateTimeAsMicroseconds;
 use serde::{Deserialize, Serialize};
-use service_sdk::my_http_server::signalr::{SignalrContractDeserializer, SignalrContractSerializer};
+use service_sdk::my_http_server::signal_r::{
+    SignalRContractDeserializer, SignalRContractSerializer,
+};
 
 #[derive(Serialize, Debug, Clone)]
 pub struct SignalREmptyMessage();
 
-impl SignalrContractDeserializer for SignalREmptyMessage {
+impl SignalRContractDeserializer for SignalREmptyMessage {
     type Item = SignalREmptyMessage;
 
     fn deserialize(_: &[&[u8]]) -> Result<Self::Item, String> {
@@ -15,18 +19,18 @@ impl SignalrContractDeserializer for SignalREmptyMessage {
 #[derive(Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SignalRMessageWrapperEmpty {
-    pub now: u64,
+    pub now: i64,
 }
 
 impl SignalRMessageWrapperEmpty {
     pub fn new() -> Self {
         Self {
-            now: chrono::Utc::now().timestamp_millis() as u64,
+            now: DateTimeAsMicroseconds::now().unix_microseconds / 1000,
         }
     }
 }
 
-impl SignalrContractSerializer for SignalRMessageWrapperEmpty {
+impl SignalRContractSerializer for SignalRMessageWrapperEmpty {
     fn serialize(self) -> Vec<Vec<u8>> {
         let json = serde_json::to_vec(&self);
         return vec![json.unwrap()];
@@ -40,7 +44,7 @@ where
     T: Serialize,
 {
     pub now: u64,
-    pub data: T,
+    pub data: Option<T>,
 }
 
 impl<T> SignalRMessageWrapper<T>
@@ -55,7 +59,8 @@ where
     }
 }
 
-impl<T> SignalrContractSerializer for SignalRMessageWrapper<T>
+/*
+impl<T> SignalRContractSerializer for SignalRMessageWrapper<T>
 where
     T: Serialize,
 {
@@ -89,7 +94,7 @@ where
     }
 }
 
-impl<T> SignalrContractSerializer for SignalRMessageWrapperWithAccount<T>
+impl<T> SignalRContractSerializer for SignalRMessageWrapperWithAccount<T>
 where
     T: Serialize,
 {
@@ -98,3 +103,4 @@ where
         return vec![json.unwrap()];
     }
 }
+ */

@@ -45,7 +45,6 @@ impl SeqSettings for SettingsReader {
     }
 }
 
-
 #[async_trait::async_trait]
 impl GrpcClientSettings for GrpcUrl {
     async fn get_grpc_url(&self, _: &'static str) -> String {
@@ -68,7 +67,6 @@ impl MyServiceBusSettings for SettingsReader {
         read_access.sb_tcp.clone()
     }
 }
-
 
 #[async_trait::async_trait]
 impl MyTelemetrySettings for SettingsReader {

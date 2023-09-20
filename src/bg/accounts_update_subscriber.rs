@@ -8,7 +8,10 @@ use service_sdk::{
     },
 };
 
-use crate::{AccountSignalRModel, AppContext, SignalRMessageWrapper, USER_ID_TAG};
+use crate::{
+    utils::init_signal_r_contract_now, AccountSignalRModel, AppContext, UpdateAccountSignalRModel,
+    USER_ID_TAG,
+};
 
 pub struct AccountsUpdatesListener {
     pub app: Arc<AppContext>,
@@ -40,12 +43,14 @@ impl SubscriberCallback<AccountBalanceUpdateSbModel> for AccountsUpdatesListener
 
             for connection in connections {
                 self.app
-                    .signalr_message_sender
-                    .send_message(
+                    .signal_r_message_sender
+                    .account_update_publisher
+                    .send_to_connection(
                         &connection,
-                        crate::SignalROutcomeMessage::AccountUpdate(SignalRMessageWrapper::new(
-                            AccountSignalRModel::from(account.clone()),
-                        )),
+                        UpdateAccountSignalRModel {
+                            now: init_signal_r_contract_now(),
+                            data: AccountSignalRModel::from(account.clone()),
+                        },
                     )
                     .await;
             }

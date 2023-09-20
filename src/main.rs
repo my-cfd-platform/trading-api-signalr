@@ -1,13 +1,30 @@
-use std::sync::Arc;
+mod app;
+mod bg;
+mod flows;
+mod grpc_clients;
+mod services;
+mod settings;
 
-use trading_api_signalr::{
-    setup_signal_r, AccountsUpdatesListener, AppContext, PositionsUpdateListener, PriceSendTimer,
-    PricesListener, SettingsReader,
-};
+mod signalr;
+
+pub mod accounts_manager_grpc {
+    tonic::include_proto!("accounts_manager");
+}
+pub mod trading_executor_grpc {
+    tonic::include_proto!("trading_executor");
+}
+
+pub use app::*;
+pub use bg::*;
+pub use grpc_clients::*;
+pub use services::*;
+pub use signalr::*;
+
+use std::sync::Arc;
 
 #[tokio::main]
 async fn main() {
-    let settings_reader = SettingsReader::new(".my-cfd-platform").await;
+    let settings_reader = settings::SettingsReader::new(".my-cfd-platform").await;
     let settings_reader = Arc::new(settings_reader);
 
     let mut service_context = service_sdk::ServiceContext::new(settings_reader.clone()).await;

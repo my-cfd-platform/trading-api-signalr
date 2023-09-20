@@ -6,7 +6,7 @@ use my_nosql_contracts::{
 };
 use rest_api_wl_shared::middlewares::SessionEntity;
 use service_sdk::{
-    my_http_server::signalr::{SignalRPublshersBuilder, SignalrConnectionsList},
+    my_http_server::signal_r::{SignalRConnectionsList, SignalRPublishersBuilder},
     my_no_sql_sdk::reader::MyNoSqlDataReader,
     ServiceContext,
 };
@@ -30,20 +30,20 @@ pub struct AppContext {
         Arc<dyn MyNoSqlDataReader<TradingProfileNoSqlEntity> + Sync + Send>,
     pub instruments_groups_ns_reader:
         Arc<dyn MyNoSqlDataReader<TradingInstrumentGroupNoSqlEntity> + Sync + Send>,
-    pub connections: Arc<SignalrConnectionsList<SignalRConnectionContext>>,
+    pub connections: Arc<SignalRConnectionsList<SignalRConnectionContext>>,
     pub accounts_manager: AccountsManagerGrpcClient,
-    pub signalr_message_sender: Arc<SignalRMessageSender>,
+    pub signal_r_message_sender: Arc<SignalRMessageSender>,
     pub bid_ask_aggregator: Arc<RwLock<BidAskAggregator>>,
     pub trading_executor: TradingExecutorGrpcClient,
 }
 
 impl AppContext {
     pub async fn new(settings_reader: &Arc<SettingsReader>, sc: &ServiceContext) -> Self {
-        let connections = Arc::new(SignalrConnectionsList::new());
+        let connections = Arc::new(SignalRConnectionsList::new());
 
         let accounts_manager =
             AccountsManagerGrpcClient::new(settings_reader.get_accounts_manager_grpc().await);
-        let signalr_builder = Arc::new(SignalRPublshersBuilder::new(connections.clone()));
+        let signal_r_builder = Arc::new(SignalRPublishersBuilder::new(connections.clone()));
 
         Self {
             instruments_ns_reader: sc.get_ns_reader().await,
@@ -55,7 +55,7 @@ impl AppContext {
             instruments_groups_ns_reader: sc.get_ns_reader().await,
             connections,
             accounts_manager,
-            signalr_message_sender: Arc::new(SignalRMessageSender::new(&signalr_builder)),
+            signal_r_message_sender: Arc::new(SignalRMessageSender::new(&signal_r_builder)),
             bid_ask_aggregator: Arc::new(RwLock::new(BidAskAggregator::new())),
             trading_executor: TradingExecutorGrpcClient::new(
                 settings_reader.get_trading_executor_grpc().await,

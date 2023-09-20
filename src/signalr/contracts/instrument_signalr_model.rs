@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+service_sdk::macros::use_signal_r_json_contract!();
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -32,4 +33,13 @@ pub struct InstumentSignalRDayOffModel {
     pub time_from: String,
     pub dow_to: i32,
     pub time_to: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[signal_r_json_contract("instruments")]
+pub struct InstrumentsSignalRModel {
+    pub now: i64,
+    pub data: Vec<InstrumentSignalRModel>,
+    pub account_id: String,
 }

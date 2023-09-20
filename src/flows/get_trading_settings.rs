@@ -5,7 +5,7 @@ use std::{
 
 use my_nosql_contracts::{
     BidAskSnapshotNoSqlEntity, PriceChangeSnapshotNoSqlEntity, TradingGroupNoSqlEntity,
-    TradingInstrumentGroupNoSqlEntity, TradingInstrumentNoSqlEntity, TradingProfileNoSqlEntity,
+    TradingInstrumentNoSqlEntity, TradingProfileNoSqlEntity,
 };
 use rust_decimal::{
     prelude::{FromPrimitive, ToPrimitive},
@@ -16,6 +16,7 @@ use crate::{
     AppContext, InstrumentGroupSignalRModel, InstrumentSignalRModel, PriceChangeSignalRModel,
     SignalRConnectionContext, SignalRError,
 };
+/*
 pub struct SignalRTradingInfo {
     pub instruments: Vec<Arc<TradingInstrumentNoSqlEntity>>,
     pub profile: Arc<TradingProfileNoSqlEntity>,
@@ -24,6 +25,7 @@ pub struct SignalRTradingInfo {
     pub prices: Vec<Arc<BidAskSnapshotNoSqlEntity>>,
     pub price_changes: Vec<PriceChangeSignalRModel>,
 }
+ */
 
 pub async fn get_trading_entities(
     app: &AppContext,
