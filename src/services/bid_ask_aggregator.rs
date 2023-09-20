@@ -1,7 +1,6 @@
 use std::collections::{BTreeMap, HashMap};
 
 use cfd_engine_sb_contracts::BidAskSbModel;
-use chrono::{DateTime, Datelike, NaiveDateTime, TimeZone, Timelike, Utc};
 
 use crate::BidAskSignalRModel;
 
@@ -68,6 +67,12 @@ impl BidAskAggregator {
                 let candle = BidAskSignalRModel::new(bid_ask, direction.direction);
                 instrument_dict.insert(bid_ask.id.clone(), candle);
             }
+        }
+    }
+
+    pub fn update_vec(&mut self, bid_asks: Vec<BidAskSbModel>) {
+        for bid_ask in bid_asks {
+            self.update(&bid_ask);
         }
     }
 
