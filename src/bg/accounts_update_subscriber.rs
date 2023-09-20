@@ -30,7 +30,10 @@ impl SubscriberCallback<AccountBalanceUpdateSbModel> for AccountsUpdatesListener
         messages_reader: &mut MessagesReader<AccountBalanceUpdateSbModel>,
     ) -> Result<(), MySbSubscriberHandleError> {
         while let Some(message) = messages_reader.get_next_message() {
+            let _ = message.my_telemetry.engage_telemetry();
+
             let operation = message.take_message();
+
             let account = operation.account_after_update.unwrap();
             let Some(connections) = self
                 .app

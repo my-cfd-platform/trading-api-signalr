@@ -2,11 +2,10 @@ use service_sdk::my_telemetry::MyTelemetryContext;
 
 use crate::{
     trading_executor_grpc::TradingExecutorGetActivePositionsGrpcRequest,
-    ActivePositionSignalRModel, AppContext, SignalRConnectionContext,
-    SignalRError,
+    ActivePositionSignalRModel, AppContext, SignalRConnectionContext, SignalRError,
 };
 
-pub async fn get_trading_info(
+pub async fn get_active_positions(
     app: &AppContext,
     signal_r_ctx: &SignalRConnectionContext,
     telemetry: &MyTelemetryContext,

@@ -32,6 +32,7 @@ impl SubscriberCallback<PositionPersistenceEvent> for PositionsUpdateListener {
         messages_reader: &mut MessagesReader<PositionPersistenceEvent>,
     ) -> Result<(), MySbSubscriberHandleError> {
         while let Some(message) = messages_reader.get_next_message() {
+            let my_telemetry = message.my_telemetry.engage_telemetry();
             let event = message.take_message();
 
             if let Some(order_sb_model) = event.create_position {
@@ -39,6 +40,7 @@ impl SubscriberCallback<PositionPersistenceEvent> for PositionsUpdateListener {
                     &self.app,
                     &order_sb_model.trader_id,
                     &order_sb_model.account_id,
+                    &my_telemetry,
                 )
                 .await;
             }
@@ -48,6 +50,7 @@ impl SubscriberCallback<PositionPersistenceEvent> for PositionsUpdateListener {
                     &self.app,
                     &order_sb_model.trader_id,
                     &order_sb_model.account_id,
+                    &my_telemetry,
                 )
                 .await;
             }
@@ -83,7 +86,12 @@ impl SubscriberCallback<PositionPersistenceEvent> for PositionsUpdateListener {
     }
 }
 
-async fn update_as_positions_list(app: &Arc<AppContext>, trader_id: &str, account_id: &str) {
+async fn update_as_positions_list(
+    app: &Arc<AppContext>,
+    trader_id: &str,
+    account_id: &str,
+    my_telemetry_context: &MyTelemetryContext,
+) {
     let Some(connections) = app
         .connections
         .get_tagged_connections_with_value(USER_ID_TAG, trader_id)
@@ -93,7 +101,9 @@ async fn update_as_positions_list(app: &Arc<AppContext>, trader_id: &str, accoun
     };
 
     let account_id = account_id.to_string();
-    let positions = generate_positions_snapshot_message(app, trader_id, &account_id).await;
+    let positions =
+        generate_positions_snapshot_message(app, trader_id, &account_id, my_telemetry_context)
+            .await;
 
     for connection in &connections {
         app.signal_r_message_sender
@@ -114,6 +124,7 @@ async fn generate_positions_snapshot_message(
     app: &Arc<AppContext>,
     trader_id: &str,
     account_id: &str,
+    my_telemetry_context: &MyTelemetryContext,
 ) -> Vec<ActivePositionSignalRModel> {
     let account_active_positions = app
         .trading_executor
@@ -122,7 +133,7 @@ async fn generate_positions_snapshot_message(
                 trader_id: trader_id.to_string(),
                 account_id: account_id.to_string(),
             },
-            &MyTelemetryContext::new(),
+            my_telemetry_context,
         )
         .await
         .unwrap();

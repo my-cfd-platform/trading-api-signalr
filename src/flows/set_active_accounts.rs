@@ -23,7 +23,7 @@ pub async fn set_active_account(
     let (instruments, groups, price_change) =
         super::get_trading_entities(app, &connection.ctx).await?;
 
-    let active_positions = super::get_trading_info(app, &connection.ctx, telemetry).await?;
+    let active_positions = super::get_active_positions(app, &connection.ctx, telemetry).await?;
 
     app.signal_r_message_sender
         .instruments_publisher
