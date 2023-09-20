@@ -27,7 +27,7 @@ impl BidAskDirection {
 }
 
 pub struct BidAskAggregator {
-    candles_cache: BTreeMap<DateTime<Utc>, HashMap<String, BidAskSignalRModel>>,
+    candles_cache: BTreeMap<u64, HashMap<String, BidAskSignalRModel>>,
     bid_ask_direction: HashMap<String, BidAskDirection>,
 }
 
@@ -54,22 +54,13 @@ impl BidAskAggregator {
             }
         };
 
-        let dt = NaiveDateTime::from_timestamp_millis(bid_ask.date_time_unix_milis as i64).unwrap();
-        let year = dt.year();
-        let month = dt.month();
-        let day = dt.day();
-        let hour = dt.hour();
-        let min = dt.minute();
-        let sec = dt.second();
-        let utc = Utc
-            .with_ymd_and_hms(year, month, day, hour, min, sec)
-            .unwrap();
+        let key = bid_ask.date_time_unix_milis / 100000;
 
-        if !self.candles_cache.contains_key(&utc) {
-            self.candles_cache.insert(utc, HashMap::new());
+        if !self.candles_cache.contains_key(&key) {
+            self.candles_cache.insert(key, HashMap::new());
         }
 
-        let instrument_dict = self.candles_cache.get_mut(&utc).unwrap();
+        let instrument_dict = self.candles_cache.get_mut(&key).unwrap();
 
         match instrument_dict.get_mut(&bid_ask.id) {
             Some(candle) => candle.update(bid_ask, direction.direction),
