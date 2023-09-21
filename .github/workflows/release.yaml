@@ -1,7 +1,7 @@
 name: Release App
 on:
   push:
-    tags: ["*"]
+    tags: "*"
 
 env:
   IMAGE_NAME: mycfdplatform/trading-api-signalr
@@ -15,9 +15,6 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y libssl-dev
-
       - name: Get the version
         id: get_version
         run: echo ::set-output name=VERSION::$(echo ${GITHUB_REF_NAME})
@@ -26,24 +23,19 @@ jobs:
         run: sed -i -e 's/^version = .*/version = "${{ steps.get_version.outputs.VERSION }}"/' Cargo.toml
 
       - name: Install Protoc
-        uses: arduino/setup-protoc@v1
-
-      - run: openssl version
-
-      - run: echo $LD_LIBRARY_PATH
-
-      - run: sudo apt install build-essential -y
-      - run: sudo apt install pkg-config libssl-dev -y
-
+        uses: arduino/setup-protoc@v1            
       - run: cargo build --release
 
       - name: Docker login
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASS: ${{ secrets.DOCKER_PASSWORD }}
-        run: |
-          echo "$DOCKER_PASS" | docker login --username "$DOCKER_USER" --password-stdin
+        run: |          
+          echo "$DOCKER_PASS" | docker login --username "$DOCKER_USER" --password-stdin   
       - name: Docker Build and Publish
-        run: |
+        run: |          
           docker build -t ${IMAGE_NAME}:${{ steps.get_version.outputs.VERSION }} .
           docker push ${IMAGE_NAME}:${{ steps.get_version.outputs.VERSION }}
+
+
+
