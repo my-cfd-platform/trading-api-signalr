@@ -20,6 +20,16 @@ impl my_http_server::signal_r::SignalRContractSerializer for InitSignalRModel {
             ));
         }
         let payload = src.get(0).unwrap();
+
+        if payload.len() < 5 {
+            return Err(format!(
+                "Invalid payload:{:?}",
+                std::str::from_utf8(payload)
+            ));
+        }
+
+        let payload = &payload[1..&payload.len() - 1];
+
         let result = payload.to_vec();
 
         let result = String::from_utf8(result);
