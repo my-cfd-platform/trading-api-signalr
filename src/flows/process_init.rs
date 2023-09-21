@@ -19,7 +19,17 @@ pub async fn process_init(
         .get_entity(&SessionEntity::get_pk(), session_token)
         .await;
 
-    println!("Session ns model: {:?}. Pk: {}, RK: {}", session, SessionEntity::get_pk(), session_token);
+    println!(
+        "Sessions: {:#?}",
+        app.sessions_ns_reader.get_table_snapshot_as_vec().await
+    );
+
+    println!(
+        "Session ns model: {:?}. Pk: {}, RK: {}",
+        session,
+        SessionEntity::get_pk(),
+        session_token
+    );
 
     let Some(session) = session else {
         return Err(SignalRError::SessionNotFound);
