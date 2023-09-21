@@ -26,9 +26,13 @@ impl SubscriberCallback<BidAskSbModel> for PricesListener {
         &self,
         messages_reader: &mut MessagesReader<BidAskSbModel>,
     ) -> Result<(), MySbSubscriberHandleError> {
-        while let Some(messages) = messages_reader.get_next_message() {
+        while let Some(messages) = messages_reader.get_all() {
+            let messages = messages
+                .into_iter()
+                .map(|x| x.get_message().to_owned())
+                .collect::<Vec<BidAskSbModel>>();
             let mut write = self.app.bid_ask_aggregator.write().await;
-            write.update(messages.get_message());
+            write.update_vec(messages);
         }
 
         return Ok(());
