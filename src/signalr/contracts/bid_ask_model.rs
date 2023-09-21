@@ -24,12 +24,11 @@ impl BidAskSignalRModel {
             id: bid_ask.id.clone(),
             bid: BidAskCandleSignalRModel::new(bid_ask.bid),
             ask: BidAskCandleSignalRModel::new(bid_ask.ask),
-            dt: bid_ask.date_time_unix_milis / 100000,
+            dt: bid_ask.date_time_unix_milis / 1000,
             dir,
         }
     }
 }
-
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[signal_r_json_contract("bidask")]
