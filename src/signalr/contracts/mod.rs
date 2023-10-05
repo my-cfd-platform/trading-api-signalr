@@ -10,6 +10,7 @@ pub mod utils;
 
 //mod signalr_message_wrapper;
 mod signalr_server_error;
+mod pending_position_signalr_model;
 
 pub use instrument_signalr_model::*;
 pub use instruments_group_signalr_model::*;
@@ -26,3 +27,4 @@ mod ping_signal_r_model;
 pub use ping_signal_r_model::*;
 mod init_signal_r_model;
 pub use init_signal_r_model::*;
+pub use pending_position_signalr_model::*;

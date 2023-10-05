@@ -1,7 +1,11 @@
-use cfd_engine_sb_contracts::{AccountSbModel, OrderSbModel, PositionPersistenceEvent};
+use cfd_engine_sb_contracts::{
+    AccountSbModel, OrderSbModel, PendingOrderSbModel,
+    PositionPersistenceEvent,
+};
 
 use crate::{
-    AccountSignalRModel, ActivePositionSignalRModel, ActivePositionSignalRSideModel, SlTpType,
+    AccountSignalRModel, ActivePositionSignalRModel, ActivePositionSignalRSideModel,
+    PendingPositionSignalRModel, SlTpType,
 };
 
 pub enum SbPositionPersistenceUpdateType {
@@ -52,6 +56,24 @@ impl From<AccountSbModel> for AccountSignalRModel {
             invest_amount: 0.0,
             achievement_status: "".to_string(),
             free_to_withdrawal: src.balance,
+        }
+    }
+}
+
+impl From<PendingOrderSbModel> for PendingPositionSignalRModel {
+    fn from(value: PendingOrderSbModel) -> Self {
+        Self {
+            id: value.id,
+            investment_amount: value.invest_amount,
+            instrument: value.asset_pair,
+            multiplier: value.leverage,
+            operation: ActivePositionSignalRSideModel::from(value.side),
+            time_stamp: value.create_date,
+            tp: None,
+            sl: None,
+            tp_type: None,
+            sl_type: None,
+            desire_price: value.desire_price,
         }
     }
 }

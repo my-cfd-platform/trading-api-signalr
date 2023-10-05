@@ -6,7 +6,7 @@ use crate::{
     AccountsSignalRModel, ActivePositionsSignalRModel, BidAsksSignalRModel,
     InstrumentGroupsSignalRModel, InstrumentsSignalRModel, PongSignalRModel,
     PriceChangesSignalRModel, SignalRConnectionContext, SignalRErrorMessage,
-    UpdateAccountSignalRModel, UpdateActivePositionSignalRModel,
+    UpdateAccountSignalRModel, UpdateActivePositionSignalRModel, PendingPositionsSignalRModel,
 };
 
 pub struct SignalRMessageSender {
@@ -28,6 +28,8 @@ pub struct SignalRMessageSender {
 
     pub active_position_publisher:
         SignalRMessagePublisher<ActivePositionsSignalRModel, SignalRConnectionContext>,
+    pub pending_position_publisher:
+        SignalRMessagePublisher<PendingPositionsSignalRModel, SignalRConnectionContext>,
 }
 
 impl SignalRMessageSender {
@@ -43,6 +45,7 @@ impl SignalRMessageSender {
             instruments_groups_publisher: builder.get_publisher(),
             position_update_publisher: builder.get_publisher(),
             active_position_publisher: builder.get_publisher(),
+            pending_position_publisher: builder.get_publisher(),
         }
     }
 }

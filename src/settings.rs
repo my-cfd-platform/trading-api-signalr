@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
-use service_sdk::{async_trait, my_grpc_extensions::GrpcClientSettings};
+use service_sdk::async_trait;
 
 service_sdk::macros::use_settings!();
 

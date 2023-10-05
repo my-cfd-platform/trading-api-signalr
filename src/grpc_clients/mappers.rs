@@ -2,8 +2,8 @@ use my_nosql_contracts::TradingInstrumentDayOff;
 
 use crate::{
     accounts_manager_grpc::AccountGrpcModel,
-    trading_executor_grpc::TradingExecutorActivePositionGrpcModel, AccountSignalRModel,
-    ActivePositionSignalRModel, InstumentSignalRDayOffModel, SlTpType,
+    trading_executor_grpc::{TradingExecutorActivePositionGrpcModel, TradingExecutorPendingPositionGrpcModel}, AccountSignalRModel,
+    ActivePositionSignalRModel, InstumentSignalRDayOffModel, SlTpType, PendingPositionSignalRModel,
 };
 
 impl Into<AccountSignalRModel> for AccountGrpcModel {
@@ -54,6 +54,48 @@ impl Into<ActivePositionSignalRModel> for TradingExecutorActivePositionGrpcModel
             sl_type: None,
             is_topping_up_active: false,
             reserved_funds_for_topping_up: 0.0,
+        };
+
+        if self.sl_in_asset_price.is_some() {
+            model.sl = self.sl_in_asset_price;
+            model.sl_type = Some(SlTpType::Price);
+        };
+
+        if self.sl_in_profit.is_some() {
+            model.sl = self.sl_in_profit;
+            model.sl_type = Some(SlTpType::Currency);
+        };
+
+        if self.tp_in_asset_price.is_some() {
+            model.tp = self.tp_in_asset_price;
+            model.tp_type = Some(SlTpType::Price);
+        };
+
+        if self.tp_in_profit.is_some() {
+            model.tp = self.tp_in_profit;
+            model.tp_type = Some(SlTpType::Currency);
+        };
+
+        model
+    }
+}
+
+
+
+impl Into<PendingPositionSignalRModel> for TradingExecutorPendingPositionGrpcModel {
+    fn into(self) -> PendingPositionSignalRModel {
+        let mut model = PendingPositionSignalRModel {
+            id: self.id,
+            investment_amount: self.invest_amount,
+            instrument: self.asset_pair,
+            multiplier: self.leverage,
+            operation: self.side.into(),
+            time_stamp: self.create_date_unix_timestamp_milis / 1000 / 1000,
+            tp: None,
+            sl: None,
+            tp_type: None,
+            sl_type: None,
+            desire_price: self.desire_price
         };
 
         if self.sl_in_asset_price.is_some() {

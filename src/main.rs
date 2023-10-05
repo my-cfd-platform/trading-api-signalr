@@ -46,11 +46,12 @@ async fn main() {
         service_sdk::my_service_bus::abstractions::subscriber::TopicQueueType::DeleteOnDisconnect,
     ).await;
 
-    service_context.register_background_job(
-        std::time::Duration::from_millis(300),
-        "prices-sender",
-        Arc::new(PriceSendTimer::new(app_context.clone())),
-    );
+    service_context.register_timer(std::time::Duration::from_millis(300), |x| {
+        x.register_timer(
+            "prices-sender",
+            Arc::new(PriceSendTimer::new(app_context.clone())),
+        )
+    });
 
     setup_signal_r(app_context.clone(), &mut service_context);
 
