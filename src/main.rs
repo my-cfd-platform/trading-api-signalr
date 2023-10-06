@@ -46,6 +46,11 @@ async fn main() {
         service_sdk::my_service_bus::abstractions::subscriber::TopicQueueType::DeleteOnDisconnect,
     ).await;
 
+    service_context.register_sb_subscribe(
+        Arc::new(PendingPositionsUpdateListener::new(app_context.clone())),
+        service_sdk::my_service_bus::abstractions::subscriber::TopicQueueType::DeleteOnDisconnect,
+    ).await;
+
     service_context.register_timer(std::time::Duration::from_millis(300), |x| {
         x.register_timer(
             "prices-sender",
