@@ -54,6 +54,10 @@ impl Into<ActivePositionSignalRModel> for TradingExecutorActivePositionGrpcModel
             sl_type: None,
             is_topping_up_active: false,
             reserved_funds_for_topping_up: 0.0,
+            base: self.base,
+            quote: self.quote,
+            collateral: self.collateral,
+            base_collateral_open_price: self.base_collateral_open_price,
         };
 
         if self.sl_in_asset_price.is_some() {

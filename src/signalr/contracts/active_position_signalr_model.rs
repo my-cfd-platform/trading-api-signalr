@@ -32,7 +32,11 @@ pub enum SlTpType {
 pub struct ActivePositionSignalRModel {
     pub id: String,
     pub investment_amount: f64,
+    pub base: String,
+    pub quote: String,
+    pub collateral: String,
     pub open_price: f64,
+    pub base_collateral_open_price: f64,
     pub open_date: u64,
     pub instrument: String,
     pub multiplier: f64,

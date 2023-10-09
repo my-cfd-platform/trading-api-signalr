@@ -97,6 +97,10 @@ impl From<OrderSbModel> for ActivePositionSignalRModel {
             sl_type: None,
             is_topping_up_active: false,
             reserved_funds_for_topping_up: 0.0,
+            base: src.base,
+            quote: src.quote,
+            collateral: src.collateral_currency,
+            base_collateral_open_price: src.base_collateral_open_price,
         };
 
         if src.sl_in_instrument_price.is_some() {
