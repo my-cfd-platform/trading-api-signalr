@@ -27,7 +27,7 @@ impl MySignalRActionSubscriber<PingSignalRModel> for PingSignalRActionSubscriber
         connection: &Arc<MySignalRConnection<SignalRConnectionContext>>,
         _: Option<HashMap<String, String>>,
         _: PingSignalRModel,
-        _: &mut SignalRTelemetry,
+        my_telemetry: &mut SignalRTelemetry,
     ) {
         self.app
             .signal_r_message_sender
@@ -39,5 +39,7 @@ impl MySignalRActionSubscriber<PingSignalRModel> for PingSignalRActionSubscriber
                 },
             )
             .await;
+
+        my_telemetry.do_not_track_this_event();
     }
 }
