@@ -17,6 +17,7 @@ pub mod trading_executor_grpc {
 pub use app::*;
 pub use bg::*;
 pub use grpc_clients::*;
+use service_sdk::ServiceInfo;
 pub use services::*;
 pub use signalr::*;
 
