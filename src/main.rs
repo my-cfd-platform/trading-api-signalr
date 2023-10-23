@@ -57,7 +57,8 @@ async fn main() {
             Arc::new(PriceSendTimer::new(app_context.clone())),
         )
     });
-
+    trade_log::core::TRADE_LOG.init_component_name(settings_reader.get_service_name().as_str()).await;
+    trade_log::core::TRADE_LOG.start(&service_context.sb_client).await;
     setup_signal_r(app_context.clone(), &mut service_context);
 
     service_context.start_application().await;
