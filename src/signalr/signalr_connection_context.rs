@@ -1,8 +1,9 @@
+use serde::{Serialize, Deserialize};
 use tokio::sync::RwLock;
 
 use crate::SignalRError;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountData {
     pub account_id: String,
     pub trading_group_id: String,

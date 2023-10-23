@@ -43,6 +43,16 @@ pub async fn process_init(
 
     let accounts = super::get_client_accounts(app, &connection.ctx, telemetry).await?;
 
+    trade_log::trade_log!(
+        &session.trader_id,
+        "",
+        "",
+        "",
+        "Initialized signal-R init.",
+        telemetry.clone(),
+        "accounts" = &accounts
+    );
+
     app.signal_r_message_sender
         .accounts_publisher
         .send_to_connection(

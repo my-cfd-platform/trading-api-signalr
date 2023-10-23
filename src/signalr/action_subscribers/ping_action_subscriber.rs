@@ -40,6 +40,6 @@ impl MySignalRActionSubscriber<PingSignalRModel> for PingSignalRActionSubscriber
             )
             .await;
 
-        my_telemetry.do_not_track_this_event();
+        // my_telemetry.do_not_track_this_event();
     }
 }

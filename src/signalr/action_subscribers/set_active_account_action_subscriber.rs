@@ -28,13 +28,24 @@ impl MySignalRActionSubscriber<SetActiveAccountModel> for SetActiveAccountSignal
     ) {
         let result = crate::flows::set_active_account(
             &self.app,
-            model.account_id,
+            model.account_id.clone(),
             &connection,
             ctx.get_ctx(),
         )
         .await;
 
         if let Err(err) = result {
+            if let Ok(trader_id) = connection.ctx.get_trader_id().await {
+                trade_log::trade_log!(
+                    &trader_id,
+                    &model.account_id,
+                    "",
+                    "",
+                    "Handled error on set active account.",
+                    "err" = &err
+                );
+            }
+
             self.app
                 .signal_r_message_sender
                 .error_publisher

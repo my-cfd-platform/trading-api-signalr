@@ -39,12 +39,14 @@ pub async fn get_trading_entities(
     SignalRError,
 > {
     let account_data = ctx.get_account_data().await?;
-    let Some(price_changes) = app
+
+    let price_changes = match app
         .price_change_ns_reader
         .get_by_partition_key(PriceChangeSnapshotNoSqlEntity::get_daily_pk())
         .await
-    else {
-        return Err(SignalRError::PriceChangeNotFound);
+    {
+        Some(src) => src,
+        None => BTreeMap::new(),
     };
 
     let Some(instruments) = app.instruments_ns_reader.get_table_snapshot_as_vec().await else {

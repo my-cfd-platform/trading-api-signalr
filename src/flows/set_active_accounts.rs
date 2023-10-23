@@ -14,11 +14,12 @@ pub async fn set_active_account(
     connection: &MySignalRConnection<SignalRConnectionContext>,
     telemetry: &MyTelemetryContext,
 ) -> Result<(), SignalRError> {
+    let trader_id = connection.ctx.get_trader_id().await?;
     let (account, trading_group) =
         super::get_client_account(app, &connection.ctx, &account_id, telemetry).await?;
 
     let account_data = super::get_account_data(app, &account.id, &trading_group).await?;
-    connection.ctx.set_active_account(account_data).await;
+    connection.ctx.set_active_account(account_data.clone()).await;
 
     let (instruments, groups, price_change) =
         super::get_trading_entities(app, &connection.ctx).await?;
@@ -31,7 +32,7 @@ pub async fn set_active_account(
             connection,
             InstrumentsSignalRModel {
                 now: init_signal_r_contract_now(),
-                data: instruments,
+                data: instruments.clone(),
                 account_id: account.id.to_string(),
             },
         )
@@ -43,7 +44,7 @@ pub async fn set_active_account(
             connection,
             InstrumentGroupsSignalRModel {
                 now: init_signal_r_contract_now(),
-                data: groups,
+                data: groups.clone(),
                 account_id: account.id.to_string(),
             },
         )
@@ -55,7 +56,7 @@ pub async fn set_active_account(
             connection,
             PriceChangesSignalRModel {
                 now: init_signal_r_contract_now(),
-                data: price_change,
+                data: price_change.clone(),
             },
         )
         .await;
@@ -66,11 +67,25 @@ pub async fn set_active_account(
             connection,
             ActivePositionsSignalRModel {
                 now: init_signal_r_contract_now(),
-                data: active_positions,
+                data: active_positions.clone(),
                 account_id: account.id.to_string(),
             },
         )
         .await;
 
+    trade_log::trade_log!(
+        &trader_id,
+        &account.id,
+        "",
+        "",
+        "Processed set account.",
+        telemetry.clone(),
+        "account" = &account,
+        "account_data" = &account_data,
+        "instruments" = &instruments,
+        "groups" = &groups,
+        "price_change" = &price_change,
+        "active_positions" = &active_positions
+    );
     return Ok(());
 }
