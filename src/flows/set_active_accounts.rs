@@ -5,7 +5,7 @@ use service_sdk::{
 use crate::{
     utils::init_signal_r_contract_now, ActivePositionsSignalRModel, AppContext,
     InstrumentGroupsSignalRModel, InstrumentsSignalRModel, PriceChangesSignalRModel,
-    SignalRConnectionContext, SignalRError,
+    SignalRConnectionContext, SignalRError, PendingPositionsSignalRModel,
 };
 
 pub async fn set_active_account(
@@ -25,6 +25,7 @@ pub async fn set_active_account(
         super::get_trading_entities(app, &connection.ctx).await?;
 
     let active_positions = super::get_active_positions(app, &connection.ctx, telemetry).await?;
+    let pending_positions = super::get_pending_positions(app, &connection.ctx, telemetry).await?;
 
     app.signal_r_message_sender
         .instruments_publisher
@@ -73,6 +74,18 @@ pub async fn set_active_account(
         )
         .await;
 
+        app.signal_r_message_sender
+        .pending_position_publisher
+        .send_to_connection(
+            connection,
+            PendingPositionsSignalRModel {
+                now: init_signal_r_contract_now(),
+                data: pending_positions.clone(),
+                account_id: account.id.to_string(),
+            },
+        )
+        .await;
+
     trade_log::trade_log!(
         &trader_id,
         &account.id,
@@ -85,7 +98,8 @@ pub async fn set_active_account(
         "instruments" = &instruments,
         "groups" = &groups,
         "price_change" = &price_change,
-        "active_positions" = &active_positions
+        "active_positions" = &active_positions,
+        "pending_positions" = &pending_positions
     );
     return Ok(());
 }

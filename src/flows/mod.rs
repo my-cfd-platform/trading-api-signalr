@@ -8,3 +8,5 @@ mod get_client_accounts;
 pub use get_client_accounts::*;
 mod get_active_positions;
 pub use get_active_positions::*;
+mod get_pending_positions;
+pub use get_pending_positions::*;
