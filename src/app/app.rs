@@ -7,7 +7,7 @@ use my_nosql_contracts::{
 use rest_api_wl_shared::middlewares::SessionEntity;
 use service_sdk::{
     my_http_server::signal_r::{SignalRConnectionsList, SignalRPublishersBuilder},
-    my_no_sql_sdk::reader::MyNoSqlDataReader,
+    my_no_sql_sdk::reader::{MyNoSqlDataReader, MyNoSqlDataReaderTcp},
     ServiceContext,
 };
 use tokio::sync::RwLock;
@@ -18,18 +18,13 @@ use crate::{
 };
 
 pub struct AppContext {
-    pub instruments_ns_reader:
-        Arc<dyn MyNoSqlDataReader<TradingInstrumentNoSqlEntity> + Sync + Send>,
-    pub bid_ask_snapshot_reader:
-        Arc<dyn MyNoSqlDataReader<BidAskSnapshotNoSqlEntity> + Sync + Send>,
-    pub sessions_ns_reader: Arc<dyn MyNoSqlDataReader<SessionEntity> + Sync + Send>,
-    pub trading_groups_ns_reader: Arc<dyn MyNoSqlDataReader<TradingGroupNoSqlEntity> + Sync + Send>,
-    pub price_change_ns_reader:
-        Arc<dyn MyNoSqlDataReader<PriceChangeSnapshotNoSqlEntity> + Sync + Send>,
-    pub trading_profile_ns_reader:
-        Arc<dyn MyNoSqlDataReader<TradingProfileNoSqlEntity> + Sync + Send>,
-    pub instruments_groups_ns_reader:
-        Arc<dyn MyNoSqlDataReader<TradingInstrumentGroupNoSqlEntity> + Sync + Send>,
+    pub instruments_ns_reader: Arc<MyNoSqlDataReaderTcp<TradingInstrumentNoSqlEntity>>,
+    pub bid_ask_snapshot_reader: Arc<MyNoSqlDataReaderTcp<BidAskSnapshotNoSqlEntity>>,
+    pub sessions_ns_reader: Arc<MyNoSqlDataReaderTcp<SessionEntity>>,
+    pub trading_groups_ns_reader: Arc<MyNoSqlDataReaderTcp<TradingGroupNoSqlEntity>>,
+    pub price_change_ns_reader: Arc<MyNoSqlDataReaderTcp<PriceChangeSnapshotNoSqlEntity>>,
+    pub trading_profile_ns_reader: Arc<MyNoSqlDataReaderTcp<TradingProfileNoSqlEntity>>,
+    pub instruments_groups_ns_reader: Arc<MyNoSqlDataReaderTcp<TradingInstrumentGroupNoSqlEntity>>,
     pub connections: Arc<SignalRConnectionsList<SignalRConnectionContext>>,
     pub accounts_manager: AccountsManagerGrpcClient,
     pub signal_r_message_sender: Arc<SignalRMessageSender>,
