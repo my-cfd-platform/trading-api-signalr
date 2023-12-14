@@ -88,7 +88,7 @@ impl From<OrderSbModel> for ActivePositionSignalRModel {
             instrument: src.asset_pair,
             multiplier: src.leverage,
             operation: ActivePositionSignalRSideModel::from(src.side),
-            swap: 0.0,
+            swap: src.swaps.iter().map(|x| x.amount).sum(),
             commission: 0.0,
             time_stamp: src.create_date,
             tp: None,

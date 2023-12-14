@@ -45,7 +45,7 @@ impl Into<ActivePositionSignalRModel> for TradingExecutorActivePositionGrpcModel
             instrument: self.asset_pair,
             multiplier: self.leverage,
             operation: self.side.into(),
-            swap: 0.0,
+            swap: self.swaps.iter().map(|x| x.amount).sum(),
             commission: 0.0,
             time_stamp: self.create_date_unix_timestamp_milis / 1000 / 1000,
             tp: None,
