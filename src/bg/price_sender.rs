@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use rust_extensions::MyTimerTick;
 use service_sdk::async_trait;
+use service_sdk::rust_extensions::MyTimerTick;
 
 use crate::{utils::init_signal_r_contract_now, AppContext, BidAsksSignalRModel};
 

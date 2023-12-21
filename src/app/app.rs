@@ -7,7 +7,7 @@ use my_nosql_contracts::{
 use rest_api_wl_shared::middlewares::SessionEntity;
 use service_sdk::{
     my_http_server::signal_r::{SignalRConnectionsList, SignalRPublishersBuilder},
-    my_no_sql_sdk::reader::{MyNoSqlDataReader, MyNoSqlDataReaderTcp},
+    my_no_sql_sdk::reader::MyNoSqlDataReaderTcp,
     ServiceContext,
 };
 use tokio::sync::RwLock;
