@@ -57,7 +57,7 @@ pub async fn process_init(
         .accounts_publisher
         .send_to_connection(
             connection,
-            AccountsSignalRModel {
+            &AccountsSignalRModel {
                 now: init_signal_r_contract_now(),
                 data: accounts,
             },

@@ -4,8 +4,8 @@ use service_sdk::{
 
 use crate::{
     utils::init_signal_r_contract_now, ActivePositionsSignalRModel, AppContext,
-    InstrumentGroupsSignalRModel, InstrumentsSignalRModel, PriceChangesSignalRModel,
-    SignalRConnectionContext, SignalRError, PendingPositionsSignalRModel,
+    InstrumentGroupsSignalRModel, InstrumentsSignalRModel, PendingPositionsSignalRModel,
+    PriceChangesSignalRModel, SignalRConnectionContext, SignalRError,
 };
 
 pub async fn set_active_account(
@@ -19,7 +19,10 @@ pub async fn set_active_account(
         super::get_client_account(app, &connection.ctx, &account_id, telemetry).await?;
 
     let account_data = super::get_account_data(app, &account.id, &trading_group).await?;
-    connection.ctx.set_active_account(account_data.clone()).await;
+    connection
+        .ctx
+        .set_active_account(account_data.clone())
+        .await;
 
     let (instruments, groups, price_change) =
         super::get_trading_entities(app, &connection.ctx).await?;
@@ -31,7 +34,7 @@ pub async fn set_active_account(
         .instruments_publisher
         .send_to_connection(
             connection,
-            InstrumentsSignalRModel {
+            &InstrumentsSignalRModel {
                 now: init_signal_r_contract_now(),
                 data: instruments.clone(),
                 account_id: account.id.to_string(),
@@ -43,7 +46,7 @@ pub async fn set_active_account(
         .instruments_groups_publisher
         .send_to_connection(
             connection,
-            InstrumentGroupsSignalRModel {
+            &InstrumentGroupsSignalRModel {
                 now: init_signal_r_contract_now(),
                 data: groups.clone(),
                 account_id: account.id.to_string(),
@@ -55,7 +58,7 @@ pub async fn set_active_account(
         .price_change_publisher
         .send_to_connection(
             connection,
-            PriceChangesSignalRModel {
+            &PriceChangesSignalRModel {
                 now: init_signal_r_contract_now(),
                 data: price_change.clone(),
             },
@@ -66,7 +69,7 @@ pub async fn set_active_account(
         .active_position_publisher
         .send_to_connection(
             connection,
-            ActivePositionsSignalRModel {
+            &ActivePositionsSignalRModel {
                 now: init_signal_r_contract_now(),
                 data: active_positions.clone(),
                 account_id: account.id.to_string(),
@@ -74,11 +77,11 @@ pub async fn set_active_account(
         )
         .await;
 
-        app.signal_r_message_sender
+    app.signal_r_message_sender
         .pending_position_publisher
         .send_to_connection(
             connection,
-            PendingPositionsSignalRModel {
+            &PendingPositionsSignalRModel {
                 now: init_signal_r_contract_now(),
                 data: pending_positions.clone(),
                 account_id: account.id.to_string(),

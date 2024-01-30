@@ -34,7 +34,7 @@ impl MySignalRActionSubscriber<PingSignalRModel> for PingSignalRActionSubscriber
             .pong_publisher
             .send_to_connection(
                 connection,
-                PongSignalRModel {
+                &PongSignalRModel {
                     now: init_signal_r_contract_now(),
                 },
             )

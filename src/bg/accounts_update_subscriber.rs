@@ -44,17 +44,16 @@ impl SubscriberCallback<AccountBalanceUpdateSbModel> for AccountsUpdatesListener
                 continue;
             };
 
+            let contract = UpdateAccountSignalRModel {
+                now: init_signal_r_contract_now(),
+                data: AccountSignalRModel::from(account.clone()),
+            };
+
             for connection in connections {
                 self.app
                     .signal_r_message_sender
                     .account_update_publisher
-                    .send_to_connection(
-                        &connection,
-                        UpdateAccountSignalRModel {
-                            now: init_signal_r_contract_now(),
-                            data: AccountSignalRModel::from(account.clone()),
-                        },
-                    )
+                    .send_to_connection(&connection, &contract)
                     .await;
             }
         }

@@ -92,17 +92,16 @@ async fn update_as_positions_list(
         generate_positions_snapshot_message(app, trader_id, &account_id, my_telemetry_context)
             .await;
 
+    let contract = PendingPositionsSignalRModel {
+        now: init_signal_r_contract_now(),
+        data: positions.clone(),
+        account_id: account_id.clone(),
+    };
+
     for connection in &connections {
         app.signal_r_message_sender
             .pending_position_publisher
-            .send_to_connection(
-                &connection,
-                PendingPositionsSignalRModel {
-                    now: init_signal_r_contract_now(),
-                    data: positions.clone(),
-                    account_id: account_id.clone(),
-                },
-            )
+            .send_to_connection(&connection, &contract)
             .await;
     }
 }

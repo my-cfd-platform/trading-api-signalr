@@ -4,14 +4,14 @@ use service_sdk::my_http_server::signal_r::{SignalRMessagePublisher, SignalRPubl
 
 use crate::{
     AccountsSignalRModel, ActivePositionsSignalRModel, BidAsksSignalRModel,
-    InstrumentGroupsSignalRModel, InstrumentsSignalRModel, PongSignalRModel,
-    PriceChangesSignalRModel, SignalRConnectionContext, SignalRErrorMessage,
-    UpdateAccountSignalRModel, UpdateActivePositionSignalRModel, PendingPositionsSignalRModel,
+    InstrumentGroupsSignalRModel, InstrumentsSignalRModel, PendingPositionsSignalRModel,
+    PongSignalRModel, PriceChangesSignalRModel, SignalRConnectionContext, SignalRErrorMessage,
+    UpdateAccountSignalRModel, UpdateActivePositionSignalRModel,
 };
 
 pub struct SignalRMessageSender {
     pub accounts_publisher: SignalRMessagePublisher<AccountsSignalRModel, SignalRConnectionContext>,
-    pub bidask_publisher: SignalRMessagePublisher<BidAsksSignalRModel, SignalRConnectionContext>,
+    pub bid_ask_publisher: SignalRMessagePublisher<BidAsksSignalRModel, SignalRConnectionContext>,
     pub error_publisher: SignalRMessagePublisher<SignalRErrorMessage, SignalRConnectionContext>,
     pub pong_publisher: SignalRMessagePublisher<PongSignalRModel, SignalRConnectionContext>,
     pub instruments_publisher:
@@ -37,7 +37,7 @@ impl SignalRMessageSender {
         Self {
             accounts_publisher: builder.get_publisher(),
             error_publisher: builder.get_publisher(),
-            bidask_publisher: builder.get_publisher(),
+            bid_ask_publisher: builder.get_publisher(),
             pong_publisher: builder.get_publisher(),
             instruments_publisher: builder.get_publisher(),
             account_update_publisher: builder.get_publisher(),

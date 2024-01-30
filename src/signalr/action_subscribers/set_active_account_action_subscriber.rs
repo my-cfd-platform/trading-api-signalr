@@ -49,7 +49,7 @@ impl MySignalRActionSubscriber<SetActiveAccountModel> for SetActiveAccountSignal
             self.app
                 .signal_r_message_sender
                 .error_publisher
-                .send_to_connection(connection, err.get_message())
+                .send_to_connection(connection, &err.get_message())
                 .await;
         }
     }

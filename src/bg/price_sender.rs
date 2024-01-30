@@ -41,17 +41,16 @@ impl MyTimerTick for PriceSendTimer {
             instruments.push(bid_ask);
         }
 
+        let contract = BidAsksSignalRModel {
+            now: init_signal_r_contract_now(),
+            data: instruments.clone(),
+        };
+
         for connection in &connections {
             self.app
                 .signal_r_message_sender
-                .bidask_publisher
-                .send_to_connection(
-                    connection,
-                    BidAsksSignalRModel {
-                        now: init_signal_r_contract_now(),
-                        data: instruments.clone(),
-                    },
-                )
+                .bid_ask_publisher
+                .send_to_connection(connection, &contract)
                 .await;
         }
     }

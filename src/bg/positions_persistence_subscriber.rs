@@ -66,17 +66,16 @@ impl SubscriberCallback<PositionPersistenceEvent> for PositionsUpdateListener {
                 };
                 let position: ActivePositionSignalRModel = order_sb_model.into();
 
+                let contract = UpdateActivePositionSignalRModel {
+                    now: init_signal_r_contract_now(),
+                    data: position.clone(),
+                };
+
                 for connection in &connections {
                     self.app
                         .signal_r_message_sender
                         .position_update_publisher
-                        .send_to_connection(
-                            &connection,
-                            UpdateActivePositionSignalRModel {
-                                now: init_signal_r_contract_now(),
-                                data: position.clone(),
-                            },
-                        )
+                        .send_to_connection(connection, &contract)
                         .await;
                 }
             }
@@ -105,17 +104,16 @@ async fn update_as_positions_list(
         generate_positions_snapshot_message(app, trader_id, &account_id, my_telemetry_context)
             .await;
 
+    let contract = ActivePositionsSignalRModel {
+        now: init_signal_r_contract_now(),
+        data: positions.clone(),
+        account_id: account_id.clone(),
+    };
+
     for connection in &connections {
         app.signal_r_message_sender
             .active_position_publisher
-            .send_to_connection(
-                &connection,
-                ActivePositionsSignalRModel {
-                    now: init_signal_r_contract_now(),
-                    data: positions.clone(),
-                    account_id: account_id.clone(),
-                },
-            )
+            .send_to_connection(connection, &contract)
             .await;
     }
 }
