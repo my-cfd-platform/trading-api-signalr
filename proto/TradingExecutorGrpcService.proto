@@ -31,6 +31,7 @@ enum TradingExecutorOperationsCodes{
     TradingProfileNotFound =20;
     TradingProfileInstrumentNotFound = 21;
     ABookReject = 22;
+    ProcessIdDuplicate = 23;
 }
 
 enum TradingExecutorClosePositionReason{
@@ -50,7 +51,7 @@ message TradingExecutorBidAsk{
     string AssetPair = 1;
     double Bid = 2;
     double Ask = 3;
-    uint64 DateTimeUnixTimestampMilis = 4;
+    uint64 DateTimeUnixTimestampMilliseconds = 4;
 }
 
 message TradingExecutorOpenPositionGrpcRequest{
@@ -77,7 +78,7 @@ message TradingExecutorActivePositionGrpcModel{
     double Leverage = 7;
     double StopOutPercent = 8;
     string CreateProcessId = 9;
-    uint64 CreateDateUnixTimestampMilis = 10;
+    uint64 CreateDateUnixTimestampMilliseconds = 10;
     string LastUpdateProcessId = 11;
     uint64 LastUpdateDate = 12;
     optional double TpInProfit = 13;
@@ -94,6 +95,8 @@ message TradingExecutorActivePositionGrpcModel{
     string Collateral = 24;
     double BaseCollateralOpenPrice = 25;
     repeated TradingExecutorSwapGrpcModel Swaps = 26;
+    optional double ReservedFundsForToppingUp = 27;
+    optional double ToppingUpPercent = 28;
 }
 
 message TradingExecutorPendingPositionGrpcModel{
@@ -106,7 +109,7 @@ message TradingExecutorPendingPositionGrpcModel{
     double Leverage = 7;
     double StopOutPercent = 8;
     string CreateProcessId = 9;
-    uint64 CreateDateUnixTimestampMilis = 10;
+    uint64 CreateDateUnixTimestampMilliseconds = 10;
     string LastUpdateProcessId = 11;
     uint64 LastUpdateDate = 12;
     optional double TpInProfit = 13;
@@ -114,11 +117,12 @@ message TradingExecutorPendingPositionGrpcModel{
     optional double TpInAssetPrice = 15;
     optional double SlInAssetPrice = 16;
     double DesirePrice = 17;
+    optional double ToppingUpPercent = 18;
 }
 
 message TradingExecutorOpenPositionGrpcResponse{
     TradingExecutorOperationsCodes Status = 1;
-    optional TradingExecutorActivePositionGrpcModel Positon = 2;
+    optional TradingExecutorActivePositionGrpcModel Position = 2;
 }
 
 message TradingExecutorClosePositionGrpcRequest{
@@ -136,7 +140,7 @@ message TradingExecutorClosedPositionGrpcModel{
     double Leverage = 5;
     double StopOutPercent = 6;
     string CreateProcessId = 7;
-    uint64 CreateDateUnixTimestampMilis = 8;
+    uint64 CreateDateUnixTimestampMilliseconds = 8;
     string LastUpdateProcessId = 9;
     uint64 LastUpdateDate = 11;
     optional double TpInProfit = 12;
@@ -153,6 +157,8 @@ message TradingExecutorClosedPositionGrpcModel{
     string CloseProcessId = 23;
     TradingExecutorClosePositionReason CloseReason = 24;
     repeated TradingExecutorSwapGrpcModel Swaps = 25;
+    optional double ReservedFundsForToppingUp = 26;
+    optional double ToppingUpPercent = 27;
 }
 
 message TradingExecutorClosePositionGrpcResponse{

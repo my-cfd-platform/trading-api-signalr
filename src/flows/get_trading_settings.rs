@@ -88,7 +88,7 @@ pub async fn get_trading_entities(
         .get_table_snapshot_as_vec()
         .await
     else {
-        return Err(SignalRError::TradingProfileNotFound);
+        return Err(SignalRError::BidAskSnapshotNotFound);
     };
 
     let (instruments_to_send, price_changes_to_send) = map_instruments(

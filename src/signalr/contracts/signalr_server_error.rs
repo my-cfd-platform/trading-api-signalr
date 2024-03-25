@@ -16,6 +16,7 @@ pub enum SignalRError {
     TraderIdNotFound,
     TradingDisabled,
     PriceChangeNotFound,
+    BidAskSnapshotNotFound,
     NetworkError(String),
 }
 
@@ -57,6 +58,9 @@ impl SignalRError {
             }
             SignalRError::PriceChangeNotFound => {
                 SignalRErrorMessage::new("Price change not found".to_string())
+            }
+            SignalRError::BidAskSnapshotNotFound => {
+                SignalRErrorMessage::new("BidAsk snapshot not found".to_string())
             }
         }
     }
