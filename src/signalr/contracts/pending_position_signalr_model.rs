@@ -18,6 +18,7 @@ pub struct PendingPositionSignalRModel {
     pub tp_type: Option<SlTpType>,
     pub sl_type: Option<SlTpType>,
     pub desire_price: f64,
+    pub is_topping_up_active: bool,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

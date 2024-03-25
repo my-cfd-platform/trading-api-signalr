@@ -49,7 +49,7 @@ pub struct ActivePositionSignalRModel {
     pub tp_type: Option<SlTpType>,
     pub sl_type: Option<SlTpType>,
     pub is_topping_up_active: bool,
-    pub reserved_funds_for_topping_up: f64,
+    pub reserved_funds_for_topping_up: Option<f64>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

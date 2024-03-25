@@ -47,13 +47,13 @@ impl Into<ActivePositionSignalRModel> for TradingExecutorActivePositionGrpcModel
             operation: self.side.into(),
             swap: self.swaps.iter().map(|x| x.amount).sum(),
             commission: 0.0,
-            time_stamp: self.create_date_unix_timestamp_milis / 1000 / 1000,
+            time_stamp: self.create_date_unix_timestamp_milliseconds / 1000 / 1000,
             tp: None,
             sl: None,
             tp_type: None,
             sl_type: None,
-            is_topping_up_active: false,
-            reserved_funds_for_topping_up: 0.0,
+            is_topping_up_active: self.topping_up_percent.is_some(),
+            reserved_funds_for_topping_up: self.reserved_funds_for_topping_up,
             base: self.base,
             quote: self.quote,
             collateral: self.collateral,
@@ -94,12 +94,13 @@ impl Into<PendingPositionSignalRModel> for TradingExecutorPendingPositionGrpcMod
             instrument: self.asset_pair,
             multiplier: self.leverage,
             operation: self.side.into(),
-            time_stamp: self.create_date_unix_timestamp_milis / 1000 / 1000,
+            time_stamp: self.create_date_unix_timestamp_milliseconds / 1000 / 1000,
             tp: None,
             sl: None,
             tp_type: None,
             sl_type: None,
-            desire_price: self.desire_price
+            desire_price: self.desire_price,
+            is_topping_up_active: self.topping_up_percent.is_some()
         };
 
         if self.sl_in_asset_price.is_some() {

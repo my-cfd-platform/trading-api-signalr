@@ -1,6 +1,5 @@
 use cfd_engine_sb_contracts::{
-    AccountSbModel, OrderSbModel, PendingOrderSbModel,
-    PositionPersistenceEvent,
+    AccountSbModel, OrderSbModel, PendingOrderSbModel, PositionPersistenceEvent,
 };
 
 use crate::{
@@ -74,6 +73,7 @@ impl From<PendingOrderSbModel> for PendingPositionSignalRModel {
             tp_type: None,
             sl_type: None,
             desire_price: value.desire_price,
+            is_topping_up_active: value.topping_up_percent.is_some(),
         }
     }
 }
@@ -95,8 +95,8 @@ impl From<OrderSbModel> for ActivePositionSignalRModel {
             sl: None,
             tp_type: None,
             sl_type: None,
-            is_topping_up_active: false,
-            reserved_funds_for_topping_up: 0.0,
+            is_topping_up_active: src.topping_up_percent.is_some(),
+            reserved_funds_for_topping_up: src.topping_up_amount,
             base: src.base,
             quote: src.quote,
             collateral: src.collateral_currency,
