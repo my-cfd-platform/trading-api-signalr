@@ -53,7 +53,7 @@ impl BidAskAggregator {
             }
         };
 
-        let key = bid_ask.date_time_unix / 100000;
+        let key = bid_ask.date_time_unix_milis / 100000;
 
         if !self.candles_cache.contains_key(&key) {
             self.candles_cache.insert(key, HashMap::new());

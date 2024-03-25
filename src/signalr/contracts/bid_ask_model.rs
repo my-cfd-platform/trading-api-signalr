@@ -24,7 +24,7 @@ impl BidAskSignalRModel {
             id: bid_ask.id.clone(),
             bid: BidAskCandleSignalRModel::new(bid_ask.bid),
             ask: BidAskCandleSignalRModel::new(bid_ask.ask),
-            dt: bid_ask.date_time_unix / 1000,
+            dt: bid_ask.date_time_unix_milis / 1000,
             dir,
         }
     }

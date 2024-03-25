@@ -15,10 +15,8 @@ service-sdk = { git = "https://github.com/MyJetTools/service-sdk", tag = "0.2.5"
     "signal-r",
 ] }
 rest-api-wl-shared = { tag = "0.2.3", git = "https://github.com/my-cfd-platform/rest-api-wl-shared.git" }
-
 cfd-engine-sb-contracts = { tag = "0.2.15", git = "https://github.com/my-cfd-platform/cfd-engine-sb-contracts.git" }
 my-nosql-contracts = { tag = "0.1.27", git = "https://github.com/my-cfd-platform/my-nosql-contracts.git" }
-
 
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
