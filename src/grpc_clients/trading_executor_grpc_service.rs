@@ -6,8 +6,8 @@ use service_sdk::my_telemetry;
     proto_file: "./proto/TradingExecutorGrpcService.proto",
     crate_ns: "crate::trading_executor_grpc",
     retries: 3,
-    request_timeout_sec: 1,
-    ping_timeout_sec: 1,
+    request_timeout_sec: 30,
+    ping_timeout_sec: 3,
     ping_interval_sec: 3,
 )]
 pub struct TradingExecutorGrpcClient;
