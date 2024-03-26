@@ -26,7 +26,6 @@ impl MySignalRActionSubscriber<InitSignalRModel> for InitSignalRActionSubscriber
         model: InitSignalRModel,
         my_telemetry: &mut SignalRTelemetry,
     ) {
-        println!("Session token: {}", model.session_token);
         let result = crate::flows::process_init(
             &self.app,
             &model.session_token,
