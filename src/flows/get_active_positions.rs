@@ -10,7 +10,7 @@ pub async fn get_active_positions(
     signal_r_ctx: &SignalRConnectionContext,
     telemetry: &MyTelemetryContext,
 ) -> Result<Vec<ActivePositionSignalRModel>, SignalRError> {
-    let Ok(active_positions) = app
+    let active_positions = match app
         .trading_executor
         .get_account_active_positions(
             TradingExecutorGetActivePositionsGrpcRequest {
@@ -20,11 +20,15 @@ pub async fn get_active_positions(
             &telemetry,
         )
         .await
-    else {
-        return Err(SignalRError::NetworkError(
-            "Grpc error. TradingExecutor".to_string(),
-        ));
-    };
+    {
+        Ok(positions) => Ok(positions),
+        Err(err) => {
+            println!("Error: {:?}", err);
+            return Err(SignalRError::NetworkError(
+                "Grpc error. TradingExecutor".to_string(),
+            ));
+        }
+    }?;
 
     let active_positions = match active_positions {
         Some(src) => src,
