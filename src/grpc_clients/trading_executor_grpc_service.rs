@@ -1,6 +1,4 @@
-use service_sdk::async_trait;
-use service_sdk::my_grpc_extensions;
-use service_sdk::my_telemetry;
+service_sdk::macros::use_grpc_client!();
 
 #[service_sdk::my_grpc_extensions::client::generate_grpc_client(
     proto_file: "./proto/TradingExecutorGrpcService.proto",

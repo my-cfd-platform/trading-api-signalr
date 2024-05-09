@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-
 service_sdk::macros::use_signal_r_json_contract!();
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

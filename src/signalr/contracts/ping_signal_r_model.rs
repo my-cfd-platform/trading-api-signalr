@@ -12,7 +12,7 @@ impl my_http_server::signal_r::SignalRContractSerializer for PingSignalRModel {
     fn serialize(&self) -> Vec<Vec<u8>> {
         return vec![];
     }
-    fn deserialize(_src: &[&[u8]]) -> Result<Self::Item, String> {
+    fn deserialize<'s>(_src: impl Iterator<Item = &'s [u8]>) -> Result<Self::Item, String> {
         Ok(PingSignalRModel {})
     }
 }

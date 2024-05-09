@@ -70,7 +70,7 @@ impl BidAskAggregator {
         }
     }
 
-    pub fn update_vec(&mut self, bid_asks: Vec<BidAskSbModel>) {
+    pub fn update_vec(&mut self, bid_asks: impl Iterator<Item = BidAskSbModel>) {
         for bid_ask in bid_asks {
             self.update(&bid_ask);
         }
