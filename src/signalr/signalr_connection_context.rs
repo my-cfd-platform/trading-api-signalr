@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 
 use crate::SignalRError;
@@ -44,7 +44,7 @@ impl SignalRConnectionContext {
     pub async fn get_trader_id(&self) -> Result<String, SignalRError> {
         let reed = self.client_data.read().await;
 
-        let Some(trader_id) = &reed.trader_id else{
+        let Some(trader_id) = &reed.trader_id else {
             return Err(SignalRError::TraderIdNotFound);
         };
         return Ok(trader_id.clone());
@@ -53,10 +53,18 @@ impl SignalRConnectionContext {
     pub async fn get_account_data(&self) -> Result<AccountData, SignalRError> {
         let reed = self.client_data.read().await;
 
-        let Some(account_info) = &reed.account_data else{
+        let Some(account_info) = &reed.account_data else {
             return Err(SignalRError::TraderIdNotFound);
         };
         return Ok(account_info.clone());
+    }
+    pub async fn get_trader_group(&self) -> Option<String> {
+        let reed = self.client_data.read().await;
+
+        let Some(account_info) = &reed.account_data else {
+            return None;
+        };
+        return Some(account_info.trading_group_id.clone());
     }
 }
 

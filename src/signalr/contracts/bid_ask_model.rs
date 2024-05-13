@@ -1,6 +1,7 @@
 use cfd_engine_sb_contracts::BidAskSbModel;
 use serde::{Deserialize, Serialize};
 use service_sdk::rust_extensions::date_time::DateTimeAsMicroseconds;
+
 service_sdk::macros::use_signal_r_json_contract!();
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -67,6 +68,15 @@ impl BidAskCandleSignalRModel {
             low: rate,
             open: rate,
             close: rate,
+        }
+    }
+
+    pub fn apply_markup(&self, markup: f64) -> Self {
+        Self {
+            high: self.high + markup,
+            low: self.low + markup,
+            open: self.open + markup,
+            close: self.close + markup,
         }
     }
 }

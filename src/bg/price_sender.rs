@@ -1,9 +1,11 @@
 use std::sync::Arc;
 
+use crate::{
+    utils::init_signal_r_contract_now, AppContext, BidAskSignalRModel, BidAsksSignalRModel,
+};
+use fx_utils::MarkupUtils;
 use service_sdk::async_trait;
 use service_sdk::rust_extensions::MyTimerTick;
-
-use crate::{utils::init_signal_r_contract_now, AppContext, BidAsksSignalRModel};
 
 pub struct PriceSendTimer {
     app: Arc<AppContext>,
@@ -35,18 +37,44 @@ impl MyTimerTick for PriceSendTimer {
             return;
         }
 
-        let mut instruments = Vec::with_capacity(prices.len());
-
-        for (_, bid_ask) in prices {
-            instruments.push(bid_ask);
-        }
-
-        let contract = BidAsksSignalRModel {
-            now: init_signal_r_contract_now(),
-            data: instruments.clone(),
-        };
-
         for connection in &connections {
+            let trading_group_id = connection.ctx.get_trader_group().await;
+
+            if trading_group_id.is_none() {
+                continue;
+            }
+
+            let trading_group_id = trading_group_id.unwrap();
+
+            let mut data = Vec::with_capacity(prices.len());
+
+            for (instrument_id, bid_ask) in &prices {
+                let markup_applier = self
+                    .app
+                    .get_markup_applier(instrument_id, &trading_group_id)
+                    .await;
+
+                match markup_applier {
+                    Some(markup_applier) => {
+                        data.push(BidAskSignalRModel {
+                            id: instrument_id.clone(),
+                            bid: bid_ask.bid.apply_markup(markup_applier.bid),
+                            ask: bid_ask.ask.apply_markup(markup_applier.ask),
+                            dt: bid_ask.dt,
+                            dir: bid_ask.dir,
+                        });
+                    }
+                    None => {
+                        data.push(bid_ask.clone());
+                    }
+                }
+            }
+
+            let contract = BidAsksSignalRModel {
+                now: init_signal_r_contract_now(),
+                data,
+            };
+
             self.app
                 .signal_r_message_sender
                 .bid_ask_publisher
