@@ -2,6 +2,7 @@ mod app;
 mod bg;
 mod flows;
 mod grpc_clients;
+mod sb_listeners;
 mod services;
 mod settings;
 
@@ -21,6 +22,7 @@ use service_sdk::ServiceInfo;
 pub use services::*;
 pub use signalr::*;
 
+use crate::sb_listeners::PricesListener;
 use std::sync::Arc;
 
 #[tokio::main]
@@ -58,8 +60,12 @@ async fn main() {
             Arc::new(PriceSendTimer::new(app_context.clone())),
         )
     });
-    trade_log::core::TRADE_LOG.init_component_name(settings_reader.get_service_name().as_str()).await;
-    trade_log::core::TRADE_LOG.start(&service_context.sb_client).await;
+    trade_log::core::TRADE_LOG
+        .init_component_name(settings_reader.get_service_name().as_str())
+        .await;
+    trade_log::core::TRADE_LOG
+        .start(&service_context.sb_client)
+        .await;
     setup_signal_r(app_context.clone(), &mut service_context);
 
     service_context.start_application().await;
