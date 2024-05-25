@@ -1,6 +1,8 @@
 use cfd_engine_sb_contracts::BidAskSbModel;
 use serde::{Deserialize, Serialize};
-use service_sdk::rust_extensions::date_time::DateTimeAsMicroseconds;
+use service_sdk::rust_extensions::{
+    date_time::DateTimeAsMicroseconds, sorted_vec::EntityWithStrKey,
+};
 
 service_sdk::macros::use_signal_r_json_contract!();
 
@@ -29,6 +31,12 @@ impl BidAskSignalRModel {
             dt: DateTimeAsMicroseconds::from(bid_ask.date_time_unix_milis).unix_microseconds / 1000,
             dir,
         }
+    }
+}
+
+impl EntityWithStrKey for BidAskSignalRModel {
+    fn get_key(&self) -> &str {
+        self.id.as_str()
     }
 }
 #[derive(Debug, Clone, Deserialize, Serialize)]

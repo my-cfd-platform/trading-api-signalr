@@ -7,7 +7,7 @@ use service_sdk::{
     my_no_sql_sdk::reader::MyNoSqlDataReaderTcp,
     ServiceContext,
 };
-use tokio::sync::RwLock;
+use tokio::sync::Mutex;
 
 use crate::{
     settings::SettingsReader, AccountsManagerGrpcClient, BidAskAggregator,
@@ -26,7 +26,7 @@ pub struct AppContext {
     pub connections: Arc<SignalRConnectionsList<SignalRConnectionContext>>,
     pub accounts_manager: AccountsManagerGrpcClient,
     pub signal_r_message_sender: Arc<SignalRMessageSender>,
-    pub bid_ask_aggregator: Arc<RwLock<BidAskAggregator>>,
+    pub bid_ask_aggregator: Arc<Mutex<BidAskAggregator>>,
     pub trading_executor: TradingExecutorGrpcClient,
 }
 
@@ -50,7 +50,7 @@ impl AppContext {
             connections,
             accounts_manager,
             signal_r_message_sender: Arc::new(SignalRMessageSender::new(&signal_r_builder)),
-            bid_ask_aggregator: Arc::new(RwLock::new(BidAskAggregator::new())),
+            bid_ask_aggregator: Arc::new(Mutex::new(BidAskAggregator::new())),
             trading_executor: TradingExecutorGrpcClient::new(
                 settings_reader.get_trading_executor_grpc().await,
             ),

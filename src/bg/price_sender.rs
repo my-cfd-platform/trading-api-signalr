@@ -25,8 +25,8 @@ impl MyTimerTick for PriceSendTimer {
         };
 
         let prices = {
-            let prices = self.app.bid_ask_aggregator.read().await;
-            prices.get_current_profile().cloned()
+            let mut prices = self.app.bid_ask_aggregator.lock().await;
+            prices.get_current_profile()
         };
 
         let Some(prices) = prices else {
@@ -48,16 +48,16 @@ impl MyTimerTick for PriceSendTimer {
 
             let mut data = Vec::with_capacity(prices.len());
 
-            for (instrument_id, bid_ask) in &prices {
+            for bid_ask in &prices {
                 let markup_applier = self
                     .app
-                    .get_markup_applier(instrument_id, &trading_group_id)
+                    .get_markup_applier(&bid_ask.id, &trading_group_id)
                     .await;
 
                 match markup_applier {
                     Some(markup_applier) => {
                         data.push(BidAskSignalRModel {
-                            id: instrument_id.clone(),
+                            id: bid_ask.id.clone(),
                             bid: bid_ask.bid.apply_markup(markup_applier.bid),
                             ask: bid_ask.ask.apply_markup(markup_applier.ask),
                             dt: bid_ask.dt,
