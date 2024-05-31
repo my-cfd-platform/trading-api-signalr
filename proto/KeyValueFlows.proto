@@ -1,0 +1,46 @@
+syntax = "proto3";
+import "google/protobuf/empty.proto";
+package keyvalue;
+
+//If Key starts with .MyKey - then key is private and can not be changed by client via API
+
+// GET
+message GetKeyValueGrpcRequestModel {
+    string ClientId = 1;
+    string Key = 2;
+}
+
+message GetKeyValueGrpcResponseModel {
+    string ClientId = 1;
+    string Key = 2;
+    optional string Value = 3;
+}
+
+//SET
+
+message SetKeyValueGrpcRequestModel {
+    string ClientId = 1;
+    string Key = 2;
+    string Value = 3;
+}
+
+//DELETE
+
+message DeleteKeyValueGrpcRequestModel {
+    string ClientId = 1;
+    string Key = 2;
+
+}
+
+// GET ALL BY USER
+message GetAllByUserGrpcRequestModel {
+    string ClientId = 1;
+}
+
+service KeyValueFlowsGrpcService {
+    rpc Get(stream GetKeyValueGrpcRequestModel) returns (stream GetKeyValueGrpcResponseModel);
+    rpc GetAllByUser(keyvalue.GetAllByUserGrpcRequestModel) returns (stream GetKeyValueGrpcResponseModel);
+    rpc Set(stream SetKeyValueGrpcRequestModel) returns (google.protobuf.Empty);    
+    rpc Delete(stream DeleteKeyValueGrpcRequestModel) returns (google.protobuf.Empty);
+    rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
+ }

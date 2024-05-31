@@ -10,7 +10,7 @@ use service_sdk::{
 use tokio::sync::Mutex;
 
 use crate::{
-    settings::SettingsReader, AccountsManagerGrpcClient, BidAskAggregator,
+    settings::SettingsReader, AccountsManagerGrpcClient, BidAskAggregator, KeyValueGrpcClient,
     SignalRConnectionContext, SignalRMessageSender, TradingExecutorGrpcClient,
 };
 
@@ -28,6 +28,7 @@ pub struct AppContext {
     pub signal_r_message_sender: Arc<SignalRMessageSender>,
     pub bid_ask_aggregator: Arc<Mutex<BidAskAggregator>>,
     pub trading_executor: TradingExecutorGrpcClient,
+    pub key_value_grpc_client: KeyValueGrpcClient,
 }
 
 impl AppContext {
@@ -49,6 +50,7 @@ impl AppContext {
             markup_profiles_ns_reader: sc.get_ns_reader().await,
             connections,
             accounts_manager,
+            key_value_grpc_client: KeyValueGrpcClient::new(settings_reader.clone()),
             signal_r_message_sender: Arc::new(SignalRMessageSender::new(&signal_r_builder)),
             bid_ask_aggregator: Arc::new(Mutex::new(BidAskAggregator::new())),
             trading_executor: TradingExecutorGrpcClient::new(

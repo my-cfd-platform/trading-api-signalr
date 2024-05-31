@@ -4,8 +4,9 @@ use service_sdk::{
 };
 
 use crate::{
-    utils::init_signal_r_contract_now, AccountsSignalRModel, AppContext, SignalRConnectionContext,
-    SignalRError, USER_ID_TAG,
+    keyvalue_grpc::GetKeyValueGrpcRequestModel, utils::init_signal_r_contract_now,
+    AccountSignalRModel, AccountsSignalRModel, AppContext, SignalRConnectionContext, SignalRError,
+    USER_ID_TAG,
 };
 
 pub async fn process_init(
@@ -29,7 +30,31 @@ pub async fn process_init(
         .add_tag_to_connection(connection, USER_ID_TAG, &session.trader_id)
         .await;
 
-    let accounts = super::get_client_accounts(app, &connection.ctx, telemetry).await?;
+    let mut accounts = super::get_client_accounts(app, &connection.ctx, telemetry).await?;
+
+    let selected_account_id = app
+        .key_value_grpc_client
+        .get(
+            vec![GetKeyValueGrpcRequestModel {
+                client_id: session.trader_id.clone(),
+                key: crate::SELECTED_ACCOUNT_ID_KEY.to_string(),
+            }],
+            telemetry,
+        )
+        .await;
+
+    let selected_account_id = match selected_account_id {
+        Ok(result) => result,
+        Err(_) => None,
+    };
+
+    if let Some(selected_account_id) = selected_account_id {
+        for selected_account_id_model in selected_account_id {
+            if let Some(value) = selected_account_id_model.value.as_ref() {
+                sort_accounts(&mut accounts, value);
+            }
+        }
+    }
 
     trade_log::trade_log!(
         &session.trader_id,
@@ -53,4 +78,13 @@ pub async fn process_init(
         .await;
 
     return Ok(());
+}
+
+fn sort_accounts(accounts: &mut Vec<AccountSignalRModel>, selected_account_id: &str) {
+    let index = accounts.iter().position(|x| x.id == selected_account_id);
+
+    if let Some(index) = index {
+        let selected_account = accounts.remove(index);
+        accounts.insert(0, selected_account);
+    }
 }

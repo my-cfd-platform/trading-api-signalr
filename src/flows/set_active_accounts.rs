@@ -1,20 +1,43 @@
+use std::sync::Arc;
+
 use service_sdk::{
     my_http_server::signal_r::MySignalRConnection, my_telemetry::MyTelemetryContext,
 };
 
 use crate::{
-    utils::init_signal_r_contract_now, ActivePositionsSignalRModel, AppContext,
-    InstrumentGroupsSignalRModel, InstrumentsSignalRModel, PendingPositionsSignalRModel,
-    PriceChangesSignalRModel, SignalRConnectionContext, SignalRError,
+    keyvalue_grpc::SetKeyValueGrpcRequestModel, utils::init_signal_r_contract_now,
+    ActivePositionsSignalRModel, AppContext, InstrumentGroupsSignalRModel, InstrumentsSignalRModel,
+    PendingPositionsSignalRModel, PriceChangesSignalRModel, SignalRConnectionContext, SignalRError,
 };
 
 pub async fn set_active_account(
-    app: &AppContext,
+    app: &Arc<AppContext>,
     account_id: String,
     connection: &MySignalRConnection<SignalRConnectionContext>,
     telemetry: &MyTelemetryContext,
 ) -> Result<(), SignalRError> {
     let trader_id = connection.ctx.get_trader_id().await?;
+
+    let app_spawned = app.clone();
+
+    let telemetry_spawned = telemetry.clone();
+
+    let trader_id_spawned = trader_id.clone();
+    let account_id_spawned = account_id.clone();
+    tokio::spawn(async move {
+        let _ = app_spawned
+            .key_value_grpc_client
+            .set(
+                vec![SetKeyValueGrpcRequestModel {
+                    client_id: trader_id_spawned,
+                    key: crate::SELECTED_ACCOUNT_ID_KEY.to_string(),
+                    value: account_id_spawned,
+                }],
+                &telemetry_spawned,
+            )
+            .await;
+    });
+
     let (account, trading_group) =
         super::get_client_account(app, &connection.ctx, &account_id, telemetry).await?;
 

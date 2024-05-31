@@ -9,11 +9,17 @@ mod settings;
 
 mod signalr;
 
+const SELECTED_ACCOUNT_ID_KEY: &'static str = ".selected-account-id";
+
 pub mod accounts_manager_grpc {
     tonic::include_proto!("accounts_manager");
 }
 pub mod trading_executor_grpc {
     tonic::include_proto!("trading_executor");
+}
+
+pub mod keyvalue_grpc {
+    tonic::include_proto!("keyvalue");
 }
 
 pub use app::*;
@@ -30,6 +36,8 @@ use std::sync::Arc;
 async fn main() {
     let settings_reader = settings::SettingsReader::new(".my-cfd-platform").await;
     let settings_reader = Arc::new(settings_reader);
+
+    let quotes_tick_freq = settings_reader.get_quotes_tick_freq().await;
 
     let mut service_context = service_sdk::ServiceContext::new(settings_reader.clone()).await;
 
@@ -55,7 +63,7 @@ async fn main() {
         service_sdk::my_service_bus::abstractions::subscriber::TopicQueueType::DeleteOnDisconnect,
     ).await;
 
-    service_context.register_timer(std::time::Duration::from_millis(300), |x| {
+    service_context.register_timer(std::time::Duration::from_millis(quotes_tick_freq), |x| {
         x.register_timer(
             "prices-sender",
             Arc::new(PriceSendTimer::new(app_context.clone())),

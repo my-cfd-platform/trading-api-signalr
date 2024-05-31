@@ -30,7 +30,7 @@ tonic = { version = "*", features = ["tls", "tls-roots", "prost"] }
 prost = "*"
 prost-types = "*"
 chrono = "*"
-
+futures = "*"
 tokio = { version = "*", features = ["full"] }
 rust_decimal = "*"
 rust_decimal_macros = "*"
